@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { AdminAuthProvider, useAdminAuth } from "./context/AdminAuthContext";
 import AdminSidebar from "./components/AdminSidebar";
@@ -19,14 +20,20 @@ import NotificationsView from "./components/NotificationsView";
 function AppInner() {
   const { isDark } = useTheme();
   const { logout } = useAdminAuth();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Derive active tab from URL path
+  const pathSegment = location.pathname.split('/').filter(Boolean)[0] ?? 'dashboard';
+  const activeTab = pathSegment;
+
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingModal, setPendingModal] = useState<string | null>(null);
   const [isLoggedOut, setIsLoggedOut] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
 
   const handleQuickAction = (tab: string, modal: string) => {
-    setActiveTab(tab);
+    navigate(`/${tab}`);
     setPendingModal(modal);
     setSidebarOpen(false);
   };
@@ -34,7 +41,7 @@ function AppInner() {
   const clearPendingModal = () => setPendingModal(null);
 
   const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
+    navigate(`/${tab}`);
     setSidebarOpen(false);
     setPendingModal(null);
   };
