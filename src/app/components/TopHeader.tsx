@@ -5,7 +5,8 @@ import { useAdminAuth } from "../context/AdminAuthContext";
 import NotificationPanel from "./NotificationPanel";
 import AdminProfileDropdown from "./AdminProfileDropdown";
 
-const UNREAD_COUNT = 4;
+import { useApi } from "../hooks/useApi";
+import { adminNotificationsApi } from "../api";
 
 interface TopHeaderProps {
   title: string;
@@ -19,6 +20,8 @@ interface TopHeaderProps {
 export default function TopHeader({ title, subtitle, onMenuClick, onNavigate, onLogout, onViewAllNotifications }: TopHeaderProps) {
   const { isDark, toggleTheme } = useTheme();
   const { admin } = useAdminAuth();
+  const { data: unreadData } = useApi(() => adminNotificationsApi.getUnreadCount());
+  const unreadCount = (unreadData as any)?.unread ?? 0;
   const adminName = admin?.full_name ?? 'Admin';
   const adminEmail = admin?.email ?? '';
   const adminInitials = adminName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -82,9 +85,9 @@ export default function TopHeader({ title, subtitle, onMenuClick, onNavigate, on
               title="Notifications"
             >
               <Bell className="w-5 h-5" />
-              {UNREAD_COUNT > 0 && (
+              {unreadCount > 0 && (
                 <span className="absolute top-1 right-1 min-w-[16px] h-4 bg-[#EF4444] rounded-full text-[9px] text-white font-bold flex items-center justify-center px-1">
-                  {UNREAD_COUNT}
+                  {unreadCount}
                 </span>
               )}
             </button>

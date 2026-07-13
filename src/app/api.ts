@@ -156,6 +156,15 @@ export const adminApi = {
   updateEvent: (id: string, body: Record<string, unknown>) =>
     put<any>(`/admin/events/${id}`, body),
   deleteEvent: (id: string) => del<any>(`/admin/events/${id}`),
+
+  // Impressions
+  getImpressionsStats: () => get<any>('/admin/impressions/stats'),
+  getImpressions: (params?: { page?: number; limit?: number }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    return get<any>(`/admin/impressions?${q}`)
+  },
 }
 
 // ── Admin Notifications API ───────────────────────────────────────────────

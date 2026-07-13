@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Users, Mail, Download, CheckCircle, XCircle, Clock, Search } from "lucide-react";
+import { Users, Mail, Download, CheckCircle, XCircle, Clock, Search, Eye, TrendingUp } from "lucide-react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -40,6 +40,7 @@ export default function WaitlistView() {
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
   const { data: apiData, refetch } = useApi(() => adminApi.getWaitlist());
+  const { data: impressionsData } = useApi(() => adminApi.getImpressionsStats());
 
   const fallback: any[] = [];
 
@@ -47,7 +48,7 @@ export default function WaitlistView() {
     name: u.full_name ?? u.name ?? "Unknown",
     email: u.email,
     joined: u.created_at ? new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
-    interest: u.interest ?? u.skill_interest ?? "—",
+    interest: u.learning_goal ?? u.interest ?? "—",
     status: u.status ?? "pending",
     avatar: AVATAR_POOL[i % AVATAR_POOL.length],
     id: u.id,
@@ -60,6 +61,8 @@ export default function WaitlistView() {
 
   const stats = [
     { label: "Total Signups", value: waitlistUsers.length,                                    icon: Users,       bg: "bg-[#F6EEFF] dark:bg-[#1E1030]", color: "text-[#7B2CBF] dark:text-[#C77DFF]" },
+    { label: "Page Views",    value: impressionsData?.impressions?.total ?? 0,                 icon: Eye,         bg: "bg-blue-50 dark:bg-blue-950/30",  color: "text-blue-600 dark:text-blue-400" },
+    { label: "Conversion",    value: `${impressionsData?.conversion_rate ?? 0}%`,             icon: TrendingUp,  bg: "bg-[#DCFCE7] dark:bg-[#052e16]",  color: "text-[#16A34A] dark:text-[#4ade80]" },
     { label: "Approved",      value: waitlistUsers.filter(u => u.status === "approved").length, icon: CheckCircle, bg: "bg-[#DCFCE7] dark:bg-[#052e16]",  color: "text-[#16A34A] dark:text-[#4ade80]" },
     { label: "Pending",       value: waitlistUsers.filter(u => u.status === "pending").length,  icon: Clock,       bg: "bg-amber-50 dark:bg-amber-950/30", color: "text-amber-600 dark:text-amber-400" },
     { label: "Rejected",      value: waitlistUsers.filter(u => u.status === "rejected").length, icon: XCircle,     bg: "bg-[#FEE2E2] dark:bg-[#450a0a]",  color: "text-[#DC2626] dark:text-[#f87171]" },
@@ -170,7 +173,7 @@ export default function WaitlistView() {
                     </span>
                   </div>
                   <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">{user.email}</p>
-                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5">{user.interest} · {user.joined}</p>
+                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5 truncate max-w-[180px]" title={user.interest}>{user.interest} · {user.joined}</p>
                 </div>
               </div>
               {user.status === "pending" && (
@@ -199,7 +202,7 @@ export default function WaitlistView() {
           <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b border-[#ECECEC] dark:border-[#2D2040] bg-[#FAFAFC] dark:bg-[#110C1A]">
-                {["Name", "Email", "Joined", "Interest", "Status", "Actions"].map((h, i) => (
+                {["Name", "Email", "Joined", "Learning Goal", "Status", "Actions"].map((h, i) => (
                   <th key={i} className="text-left py-3 px-4 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -218,7 +221,7 @@ export default function WaitlistView() {
                     <td className="py-3.5 px-4 text-sm text-[#6B7280] dark:text-[#9CA3AF]">{user.email}</td>
                     <td className="py-3.5 px-4 text-sm text-[#6B7280] dark:text-[#9CA3AF] whitespace-nowrap">{user.joined}</td>
                     <td className="py-3.5 px-4">
-                      <Badge className="bg-[#F6EEFF] dark:bg-[#1E1030] text-[#7B2CBF] dark:text-[#C77DFF] border-0 text-xs">{user.interest}</Badge>
+                      <Badge className="bg-[#F6EEFF] dark:bg-[#1E1030] text-[#7B2CBF] dark:text-[#C77DFF] border-0 text-xs max-w-[120px] truncate cursor-default" title={user.interest}>{user.interest}</Badge>
                     </td>
                     <td className="py-3.5 px-4">
                       <span className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${cfg.badge}`}>
