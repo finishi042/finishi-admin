@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import {
   Bell, UserPlus, BookOpen, AlertTriangle, Zap, CreditCard, Settings,
   CheckCircle2, Trash2, Clock, Search, SlidersHorizontal, X,
-  ChevronRight, ArrowLeft, Users, MailCheck, RefreshCw,
+  ChevronRight, ArrowLeft, Users, MailCheck, RefreshCw, Send,
 } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { NotificationsSkeleton } from "./LoadingSkeleton";
+import BroadcastModal from "./modals/BroadcastModal";
 import { useApi } from "../hooks/useApi";
 import { adminNotificationsApi, type AdminNotification as ApiNotif } from "../api";
 
@@ -52,13 +54,14 @@ interface NotificationsViewProps {
 }
 
 export default function NotificationsView({ onNavigate }: NotificationsViewProps) {
-  const { data: apiNotifs, refetch } = useApi(() => adminNotificationsApi.list({ limit: 100 }));
+  const { data: apiNotifs, loading, refetch } = useApi(() => adminNotificationsApi.list({ limit: 100 }));
   const [items, setItems] = useState<Notification[]>([]);
   const [filterType, setFilterType] = useState("all");
   const [filterRead, setFilterRead] = useState<"all" | "read" | "unread">("all");
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [detailId, setDetailId] = useState<number | null>(null);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
 
   // Sync API data to local state
   useEffect(() => {
@@ -144,8 +147,15 @@ export default function NotificationsView({ onNavigate }: NotificationsViewProps
     { label: "Today",   value: items.filter(n => n.date === "Today").length,   color: "text-[#7B2CBF]", sub: "New today" },
   ];
 
+  if (loading) return <NotificationsSkeleton />;
+
   return (
     <div className="space-y-5 md:space-y-6">
+      <BroadcastModal
+        open={broadcastOpen}
+        onClose={() => setBroadcastOpen(false)}
+        onSent={() => refetch()}
+      />
       {/* Page header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
@@ -174,6 +184,14 @@ export default function NotificationsView({ onNavigate }: NotificationsViewProps
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Refresh
+          </Button>
+          <Button
+            size="sm"
+            onClick={() => setBroadcastOpen(true)}
+            className="bg-[#7B2CBF] hover:bg-[#6A24A8] text-white"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            Send Notification
           </Button>
         </div>
       </div>

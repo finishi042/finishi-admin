@@ -5,6 +5,8 @@ import { Button } from "./ui/button";
 import AddSkillModal from "./modals/AddSkillModal";
 import EditSkillModal from "./modals/EditSkillModal";
 import ManageSkillModal from "./modals/ManageSkillModal";
+import ConfirmDeleteDialog from "./modals/ConfirmDeleteDialog";
+import { SkillsSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
 
@@ -25,8 +27,11 @@ export default function SkillsView({ autoOpenModal, onModalOpened }: SkillsViewP
   const [addSkillOpen, setAddSkillOpen] = useState(false);
   const [editSkill, setEditSkill] = useState<{ skill: Skill; index: number } | null>(null);
   const [manageSkill, setManageSkill] = useState<Skill | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ index: number; name: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const { data: apiData, refetch } = useApi(() => adminApi.getSkills());
+  const { data: apiData, loading, refetch } = useApi(() => adminApi.getSkills());
 
   const fallback: Skill[] = [];
 
@@ -69,9 +74,31 @@ export default function SkillsView({ autoOpenModal, onModalOpened }: SkillsViewP
 
   const handleDelete = async (index: number) => {
     const id = (skills[index] as any).id;
-    if (id) { try { await adminApi.deleteSkill(id); refetch(); return; } catch {} }
-    setSkills(prev => prev.filter((_, i) => i !== index));
+    if (!id) {
+      setSkills(prev => prev.filter((_, i) => i !== index));
+      return;
+    }
+    setDeleteTarget({ index, name: skills[index].name });
+    setDeleteError(null);
   };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const id = (skills[deleteTarget.index] as any).id;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await adminApi.deleteSkill(id);
+      setDeleteTarget(null);
+      refetch();
+    } catch (err: any) {
+      setDeleteError(err.message ?? 'Failed to delete skill');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  if (loading) return <SkillsSkeleton />;
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -91,6 +118,15 @@ export default function SkillsView({ autoOpenModal, onModalOpened }: SkillsViewP
         open={!!manageSkill}
         skill={manageSkill}
         onClose={() => setManageSkill(null)}
+      />
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onClose={() => { setDeleteTarget(null); setDeleteError(null); }}
+        onConfirm={confirmDelete}
+        title={`Delete "${deleteTarget?.name ?? ''}"?`}
+        description="This skill will be permanently deleted. Lessons associated with this skill will not be removed but will lose their skill reference."
+        loading={deleteLoading}
+        error={deleteError}
       />
 
       {/* Header */}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { BookOpen, Plus, Filter, Download, Eye, Edit, Trash2, Sparkles, X } from "lucide-react";
+import { BookOpen, Plus, Filter, Download, Eye, Edit, Trash2, Sparkles, X, FileText } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -8,6 +8,9 @@ import LessonPreviewModal from "./modals/LessonPreviewModal";
 import EditLessonModal from "./modals/EditLessonModal";
 import FilterLessonsPanel, { LessonFilters } from "./modals/FilterLessonsPanel";
 import ExportDialog from "./modals/ExportDialog";
+import ConfirmDeleteDialog from "./modals/ConfirmDeleteDialog";
+import LessonEditorModal from "./editor/LessonEditorModal";
+import { LessonsSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
 
@@ -44,12 +47,16 @@ export default function LessonsView({ autoOpenModal, aiMode, onModalOpened }: Le
   const [isAiMode, setIsAiMode] = useState(false);
   const [previewLesson, setPreviewLesson] = useState<{ lesson: Lesson; index: number } | null>(null);
   const [editLesson, setEditLesson] = useState<{ lesson: Lesson; index: number } | null>(null);
+  const [editorLesson, setEditorLesson] = useState<{ id: string; title: string } | null>(null);
   const [filterOpen, setFilterOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [pendingFilters, setPendingFilters] = useState<LessonFilters>(DEFAULT_FILTERS);
   const [appliedFilters, setAppliedFilters] = useState<LessonFilters>(DEFAULT_FILTERS);
+  const [deleteTarget, setDeleteTarget] = useState<{ index: number; title: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const { data: apiData, refetch } = useApi(() => adminApi.getLessons());
+  const { data: apiData, loading, refetch } = useApi(() => adminApi.getLessons());
 
   const fallback: Lesson[] = [];
 
@@ -79,10 +86,10 @@ export default function LessonsView({ autoOpenModal, aiMode, onModalOpened }: Le
     }
   }, [autoOpenModal, aiMode]);
 
-  const handleCreateLesson = async (lesson: { title: string; skill: string; description: string; duration: string; status: string }) => {
+  const handleCreateLesson = async (lesson: { title: string; skill: string; description: string; duration: string; status: string; course_id?: string }) => {
     const duration_mins = parseInt(lesson.duration) || 10;
     try {
-      await adminApi.createLesson({ title: lesson.title, skill_name: lesson.skill, description: lesson.description, duration_mins, status: lesson.status.toLowerCase() });
+      await adminApi.createLesson({ title: lesson.title, skill_name: lesson.skill, description: lesson.description, duration_mins, status: lesson.status.toLowerCase(), course_id: lesson.course_id });
       refetch();
     } catch {
       setLessons(prev => [{ ...lesson, created: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }), views: 0 }, ...prev]);
@@ -99,8 +106,28 @@ export default function LessonsView({ autoOpenModal, aiMode, onModalOpened }: Le
 
   const handleDelete = async (index: number) => {
     const id = (lessons[index] as any).id;
-    if (id) { try { await adminApi.deleteLesson(id); refetch(); return; } catch {} }
-    setLessons(prev => prev.filter((_, i) => i !== index));
+    if (!id) {
+      setLessons(prev => prev.filter((_, i) => i !== index));
+      return;
+    }
+    setDeleteTarget({ index, title: lessons[index].title });
+    setDeleteError(null);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const id = (lessons[deleteTarget.index] as any).id;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await adminApi.deleteLesson(id);
+      setDeleteTarget(null);
+      refetch();
+    } catch (err: any) {
+      setDeleteError(err.message ?? 'Failed to delete lesson');
+    } finally {
+      setDeleteLoading(false);
+    }
   };
 
   const filteredLessons = useMemo(() => {
@@ -149,6 +176,8 @@ export default function LessonsView({ autoOpenModal, aiMode, onModalOpened }: Le
     },
   ];
 
+  if (loading) return <LessonsSkeleton />;
+
   return (
     <div className="space-y-4 md:space-y-6">
       <CreateLessonModal
@@ -186,6 +215,22 @@ export default function LessonsView({ autoOpenModal, aiMode, onModalOpened }: Le
         open={exportOpen}
         onClose={() => setExportOpen(false)}
         totalLessons={filteredLessons.length}
+      />
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onClose={() => { setDeleteTarget(null); setDeleteError(null); }}
+        onConfirm={confirmDelete}
+        title={`Delete "${deleteTarget?.title ?? ''}"?`}
+        description="This lesson will be permanently deleted. If it is assigned to a learning path phase, it will be removed from there as well."
+        loading={deleteLoading}
+        error={deleteError}
+      />
+      <LessonEditorModal
+        open={!!editorLesson}
+        lessonId={editorLesson?.id ?? null}
+        lessonTitle={editorLesson?.title}
+        onClose={() => setEditorLesson(null)}
+        onSaved={() => refetch()}
       />
 
       {/* Stats */}
@@ -332,6 +377,13 @@ export default function LessonsView({ autoOpenModal, aiMode, onModalOpened }: Le
                       </td>
                       <td className="py-4 px-4">
                         <div className="flex items-center gap-1">
+                          <button
+                            onClick={() => setEditorLesson({ id: (lesson as any).id, title: lesson.title })}
+                            className="p-1.5 hover:bg-[#F6EEFF] dark:hover:bg-[#1E1030] rounded-lg"
+                            title="Edit content & quiz"
+                          >
+                            <FileText className="w-4 h-4 text-[#7B2CBF] dark:text-[#C77DFF]" />
+                          </button>
                           <button
                             onClick={() => setPreviewLesson({ lesson, index: originalIndex })}
                             className="p-1.5 hover:bg-[#F6EEFF] dark:hover:bg-[#1E1030] rounded-lg"

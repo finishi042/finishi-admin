@@ -1,25 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Badge } from "../ui/badge";
 import { X } from "lucide-react";
+import { adminApi } from "../../api";
 
 interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
   onSave?: (user: { name: string; email: string; role: string; skills: string[] }) => void;
 }
-
-const skillOptions = [
-  "Product Design",
-  "Digital Marketing",
-  "Frontend Development",
-  "AI Prompt Engineering",
-  "Data Analytics",
-  "Content Writing",
-];
 
 const roleOptions = ["Learner", "Instructor", "Admin"];
 
@@ -29,6 +21,19 @@ export default function AddUserModal({ open, onClose, onSave }: AddUserModalProp
   const [role, setRole] = useState("Learner");
   const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Fetch skills dynamically
+  const [skills, setSkills] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (open) {
+      adminApi.getSkills()
+        .then((data: any) => {
+          const mapped = (Array.isArray(data) ? data : []).map((s: any) => ({ id: s.id, name: s.name }));
+          setSkills(mapped);
+        })
+        .catch(() => setSkills([]));
+    }
+  }, [open]);
 
   const toggleSkill = (skill: string) => {
     setSelectedSkills(prev =>
@@ -98,17 +103,17 @@ export default function AddUserModal({ open, onClose, onSave }: AddUserModalProp
           <div className="space-y-2">
             <Label className="text-[#111827] dark:text-[#F9FAFB]">Skill Interests</Label>
             <div className="flex flex-wrap gap-2">
-              {skillOptions.map(skill => (
+              {skills.map(s => (
                 <button
-                  key={skill}
-                  onClick={() => toggleSkill(skill)}
+                  key={s.id}
+                  onClick={() => toggleSkill(s.name)}
                   className={`px-3 py-1.5 rounded-full text-sm border transition-all ${
-                    selectedSkills.includes(skill)
+                    selectedSkills.includes(s.name)
                       ? "bg-[#7B2CBF] text-white border-[#7B2CBF]"
                       : "border-[#ECECEC] dark:border-[#2D2040] text-[#6B7280] dark:text-[#9CA3AF] hover:border-[#7B2CBF]"
                   }`}
                 >
-                  {skill}
+                  {s.name}
                 </button>
               ))}
             </div>

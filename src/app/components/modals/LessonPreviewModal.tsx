@@ -1,6 +1,8 @@
-import { X, BookOpen, Eye, Clock, Calendar, Tag, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, BookOpen, Eye, Clock, Calendar, Tag, HelpCircle, Loader2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { adminApi } from "../../api";
 
 interface Lesson {
   title: string;
@@ -12,25 +14,6 @@ interface Lesson {
   views: number;
 }
 
-const LESSON_CONTENT: Record<string, string[]> = {
-  "Introduction to User Research": [
-    "User research is the foundation of great product design. In this lesson, you'll learn the essential techniques for understanding your users' needs, behaviors, and motivations.",
-    "We'll cover key methods including contextual inquiry, user interviews, and observational studies. You'll practice synthesizing qualitative data into actionable insights.",
-    "By the end of this lesson, you'll be able to plan and execute a basic user research study, analyze findings, and present them to stakeholders effectively.",
-  ],
-  "SEO Best Practices 2026": [
-    "Search engine optimization has evolved dramatically. This lesson covers the latest algorithm changes and what they mean for your content strategy in 2026.",
-    "Topics include Core Web Vitals optimization, AI-assisted content creation guidelines, entity-based SEO, and the rise of voice and visual search.",
-    "Practical exercises include auditing an existing page, implementing structured data markup, and building a keyword cluster strategy.",
-  ],
-};
-
-const DEFAULT_CONTENT = [
-  "This lesson provides a comprehensive introduction to the core concepts and practical applications within the skill area.",
-  "Through guided exercises and real-world examples, you'll build a strong foundation that prepares you for more advanced topics in the learning path.",
-  "By the end of this lesson, you'll have practical knowledge you can immediately apply in your work.",
-];
-
 interface LessonPreviewModalProps {
   open: boolean;
   lesson: Lesson | null;
@@ -39,9 +22,31 @@ interface LessonPreviewModalProps {
 }
 
 export default function LessonPreviewModal({ open, lesson, onClose, onEdit }: LessonPreviewModalProps) {
-  if (!open || !lesson) return null;
+  const [content, setContent] = useState<string>("");
+  const [quiz, setQuiz] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  const content = LESSON_CONTENT[lesson.title] || DEFAULT_CONTENT;
+  useEffect(() => {
+    if (!open || !lesson) {
+      setContent("");
+      setQuiz(null);
+      return;
+    }
+
+    const lessonId = (lesson as any).id;
+    if (!lessonId) return;
+
+    setLoading(true);
+    Promise.all([
+      adminApi.getLesson(lessonId).catch(() => null),
+      adminApi.getLessonQuiz(lessonId).catch(() => null),
+    ]).then(([lessonData, quizData]) => {
+      setContent(lessonData?.content ?? "");
+      setQuiz(quizData ?? null);
+    }).finally(() => setLoading(false));
+  }, [open, lesson]);
+
+  if (!open || !lesson) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -64,7 +69,9 @@ export default function LessonPreviewModal({ open, lesson, onClose, onEdit }: Le
             </button>
           </div>
           <h2 className="font-semibold text-white text-xl leading-tight">{lesson.title}</h2>
-          <p className="text-white/60 text-sm mt-2">{lesson.description}</p>
+          {lesson.description && (
+            <p className="text-white/60 text-sm mt-2">{lesson.description}</p>
+          )}
 
           {/* Meta row */}
           <div className="flex flex-wrap gap-4 mt-4 text-xs text-white/60">
@@ -77,57 +84,79 @@ export default function LessonPreviewModal({ open, lesson, onClose, onEdit }: Le
 
         {/* Content */}
         <div className="overflow-y-auto flex-1 p-6 space-y-5">
-          {/* Lesson Outline */}
-          <div>
-            <h4 className="text-sm font-semibold text-[#374151] dark:text-[#D1D5DB] mb-3 flex items-center gap-2">
-              <User className="w-4 h-4 text-[#7B2CBF]" />
-              Lesson Overview
-            </h4>
-            <div className="space-y-3">
-              {content.map((para, i) => (
-                <p key={i} className="text-sm text-[#6B7280] dark:text-[#9CA3AF] leading-relaxed">{para}</p>
-              ))}
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-5 h-5 animate-spin text-[#7B2CBF]" />
+              <span className="ml-2 text-sm text-[#6B7280]">Loading content...</span>
             </div>
-          </div>
-
-          {/* What you'll learn */}
-          <div className="p-4 rounded-xl bg-[#F6EEFF] dark:bg-[#1E1030] border border-[#C77DFF]/20">
-            <h4 className="text-sm font-semibold text-[#7B2CBF] dark:text-[#C77DFF] mb-3">What you'll learn</h4>
-            <ul className="space-y-2">
-              {[
-                "Core principles and best practices",
-                "Hands-on techniques with real examples",
-                "How to apply this knowledge in practice",
-                "Common mistakes to avoid",
-              ].map((item, i) => (
-                <li key={i} className="flex items-start gap-2 text-sm text-[#374151] dark:text-[#D1D5DB]">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#7B2CBF] mt-2 shrink-0" />
-                  {item}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Lesson sections */}
-          <div>
-            <h4 className="text-sm font-semibold text-[#374151] dark:text-[#D1D5DB] mb-3">Lesson Sections</h4>
-            <div className="space-y-2">
-              {[
-                { section: "Introduction", time: "2 min" },
-                { section: "Core Concepts", time: "5 min" },
-                { section: "Practical Example", time: "4 min" },
-                { section: "Quiz & Summary", time: "1 min" },
-              ].map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-3 rounded-lg bg-[#FAFAFC] dark:bg-[#1A1228] border border-[#ECECEC] dark:border-[#2D2040]">
-                  <div className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-[#7B2CBF] flex items-center justify-center text-white text-xs shrink-0">{i + 1}</span>
-                    <span className="text-sm text-[#111827] dark:text-[#F9FAFB]">{item.section}</span>
-                  </div>
-                  <span className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">{item.time}</span>
+          ) : (
+            <>
+              {/* Lesson Content (rendered HTML) */}
+              {content ? (
+                <div>
+                  <h4 className="text-sm font-semibold text-[#374151] dark:text-[#D1D5DB] mb-3">Lesson Content</h4>
+                  <div
+                    className="prose prose-sm dark:prose-invert max-w-none text-[#374151] dark:text-[#D1D5DB]"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
                 </div>
-              ))}
-            </div>
-          </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BookOpen className="w-8 h-8 text-[#D1D5DB] mx-auto mb-2" />
+                  <p className="text-sm text-[#6B7280]">No content added yet.</p>
+                  <p className="text-xs text-[#9CA3AF] mt-1">Use the content editor to add lesson material.</p>
+                </div>
+              )}
+
+              {/* Quiz Preview */}
+              {quiz && quiz.questions && quiz.questions.length > 0 && (
+                <div className="p-4 rounded-xl bg-[#F6EEFF] dark:bg-[#1E1030] border border-[#C77DFF]/20">
+                  <h4 className="text-sm font-semibold text-[#7B2CBF] dark:text-[#C77DFF] mb-3 flex items-center gap-2">
+                    <HelpCircle className="w-4 h-4" />
+                    Quiz: {quiz.title || "Assessment"}
+                  </h4>
+                  <div className="space-y-3">
+                    {quiz.questions.map((q: any, i: number) => (
+                      <div key={q.id ?? i} className="p-3 rounded-lg bg-white dark:bg-[#160D20] border border-[#ECECEC] dark:border-[#2D2040]">
+                        <p className="text-sm font-medium text-[#111827] dark:text-[#F9FAFB] mb-2">
+                          {i + 1}. {q.question}
+                        </p>
+                        <div className="space-y-1 ml-4">
+                          {(q.options ?? []).map((opt: any) => (
+                            <div
+                              key={opt.id}
+                              className={`flex items-center gap-2 text-xs py-1 ${
+                                opt.id === q.correct_option_id
+                                  ? "text-[#22C55E] font-medium"
+                                  : "text-[#6B7280] dark:text-[#9CA3AF]"
+                              }`}
+                            >
+                              <span className={`w-3.5 h-3.5 rounded-full border-2 flex items-center justify-center shrink-0 ${
+                                opt.id === q.correct_option_id
+                                  ? "border-[#22C55E] bg-[#22C55E]"
+                                  : "border-[#D1D5DB] dark:border-[#4B5563]"
+                              }`}>
+                                {opt.id === q.correct_option_id && (
+                                  <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                                )}
+                              </span>
+                              {opt.text}
+                            </div>
+                          ))}
+                        </div>
+                        {q.explanation && (
+                          <p className="text-xs text-[#6B7280] italic mt-2 ml-4">Explanation: {q.explanation}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-[#7B2CBF] mt-3">
+                    {quiz.questions.length} question{quiz.questions.length !== 1 ? "s" : ""} · Passing score: {quiz.passing_score}%
+                  </p>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Footer */}

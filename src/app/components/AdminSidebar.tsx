@@ -6,6 +6,7 @@ import {
   Lightbulb,
   Map,
   BookOpen,
+  Layers,
   BarChart3,
   Settings,
   LogOut,
@@ -37,6 +38,7 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
     { id: "users", label: "Users", icon: Users },
     { id: "skills", label: "Skills", icon: Lightbulb },
     { id: "paths", label: "Learning Paths", icon: Map },
+    { id: "courses", label: "Courses", icon: Layers },
     { id: "lessons", label: "Lessons", icon: BookOpen },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
   ];

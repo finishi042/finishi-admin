@@ -5,13 +5,30 @@ import { Button } from "./ui/button";
 interface LogoutScreenProps {
   onCancel: () => void;
   onConfirmLogout: () => void;
+  adminName?: string;
+  adminRole?: string;
+  currentPage?: string;
 }
 
 type Stage = "confirm" | "loggingOut" | "done";
 
-export default function LogoutScreen({ onCancel, onConfirmLogout }: LogoutScreenProps) {
+export default function LogoutScreen({ onCancel, onConfirmLogout, adminName, adminRole, currentPage }: LogoutScreenProps) {
   const [stage, setStage] = useState<Stage>("confirm");
   const [progress, setProgress] = useState(0);
+  const [sessionStart] = useState(() => {
+    // Try to get session start from sessionStorage, fallback to now
+    const stored = sessionStorage.getItem('finishi_session_start');
+    return stored ? parseInt(stored) : Date.now();
+  });
+
+  // Calculate session duration
+  const sessionMins = Math.max(1, Math.round((Date.now() - sessionStart) / 60000));
+  const sessionDisplay = sessionMins >= 60
+    ? `${Math.floor(sessionMins / 60)}h ${sessionMins % 60}m`
+    : `${sessionMins}m`;
+
+  const initials = (adminName ?? "Admin").split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+  const displayRole = adminRole === "super_admin" ? "Super Admin" : "Admin";
 
   const handleLogout = () => {
     setStage("loggingOut");
@@ -62,22 +79,22 @@ export default function LogoutScreen({ onCancel, onConfirmLogout }: LogoutScreen
             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 mb-8 text-left space-y-3">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#7B2CBF]/40 flex items-center justify-center shrink-0">
-                  <span className="text-white font-bold text-sm">AD</span>
+                  <span className="text-white font-bold text-sm">{initials}</span>
                 </div>
                 <div>
-                  <p className="font-semibold text-white text-sm">Admin</p>
+                  <p className="font-semibold text-white text-sm">{adminName ?? "Admin"}</p>
                   <p className="text-[#9CA3AF] text-xs"></p>
                 </div>
                 <div className="ml-auto flex items-center gap-1.5 bg-[#7B2CBF]/30 rounded-full px-2.5 py-1">
                   <Shield className="w-3 h-3 text-[#C77DFF]" />
-                  <span className="text-xs text-[#C77DFF] font-medium">Super Admin</span>
+                  <span className="text-xs text-[#C77DFF] font-medium">{displayRole}</span>
                 </div>
               </div>
               <div className="border-t border-white/10 pt-3 grid grid-cols-3 gap-3 text-center">
                 {[
-                  { label: "Session", value: "4h 22m" },
-                  { label: "Actions", value: "47" },
-                  { label: "Last page", value: "Users" },
+                  { label: "Session", value: sessionDisplay },
+                  { label: "Role", value: displayRole },
+                  { label: "Last page", value: currentPage ?? "Dashboard" },
                 ].map(({ label, value }) => (
                   <div key={label}>
                     <p className="text-white font-semibold text-sm">{value}</p>
@@ -99,7 +116,7 @@ export default function LogoutScreen({ onCancel, onConfirmLogout }: LogoutScreen
               <Button
                 variant="outline"
                 onClick={onCancel}
-                className="border-white/20 text-white hover:bg-white/10 h-11 w-full"
+                className="border-white/30 text-white/90 hover:bg-white/10 hover:text-white h-11 w-full bg-white/5"
               >
                 Stay in Dashboard
               </Button>

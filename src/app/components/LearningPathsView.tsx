@@ -7,6 +7,8 @@ import { Progress } from "./ui/progress";
 import CreateLearningPathModal from "./modals/CreateLearningPathModal";
 import ViewPathModal from "./modals/ViewPathModal";
 import EditPathModal from "./modals/EditPathModal";
+import ConfirmDeleteDialog from "./modals/ConfirmDeleteDialog";
+import { LearningPathsSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
 
@@ -30,8 +32,11 @@ export default function LearningPathsView({ autoOpenModal, onModalOpened }: Lear
   const [createPathOpen, setCreatePathOpen] = useState(false);
   const [viewPath, setViewPath] = useState<{ path: LearningPath; index: number } | null>(null);
   const [editPath, setEditPath] = useState<{ path: LearningPath; index: number } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ index: number; name: string } | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  const { data: apiData, refetch } = useApi(() => adminApi.getLearningPaths());
+  const { data: apiData, loading, refetch } = useApi(() => adminApi.getLearningPaths());
 
   const fallback: LearningPath[] = [];
 
@@ -45,7 +50,7 @@ export default function LearningPathsView({ autoOpenModal, onModalOpened }: Lear
       description: p.description ?? "",
       users: p.enrolled_count ?? 0,
       completion: p.completion_rate ?? 0,
-      lessons: p.lessons?.[0]?.count ?? p.lesson_count ?? 0,
+      lessons: p.lesson_count ?? 0,
       status: p.status === "active" ? "Active" : p.status === "draft" ? "Draft" : p.status,
       created: p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
       id: p.id,
@@ -67,11 +72,26 @@ export default function LearningPathsView({ autoOpenModal, onModalOpened }: Lear
     { label: "Total Lessons", value: learningPaths.reduce((s, p) => s + p.lessons, 0).toString(), icon: BookOpen },
   ];
 
-  const handleCreatePath = async (path: { name: string; description: string; skill: string; status: string }) => {
+  const handleCreatePath = async (path: { name: string; description: string; skill: string; status: string; courseIds: string[] }) => {
     try {
-      await adminApi.createLearningPath({ name: path.name, description: path.description, skill_name: path.skill, status: path.status.toLowerCase() });
+      const created = await adminApi.createLearningPath({ name: path.name, description: path.description, skill_name: path.skill, status: path.status.toLowerCase() });
+      console.log('Created path:', created);
+
+      // Add selected courses to the path
+      const pathId = created?.id;
+      if (pathId && path.courseIds.length > 0) {
+        for (let i = 0; i < path.courseIds.length; i++) {
+          try {
+            await adminApi.addCourseToPath(pathId, { course_id: path.courseIds[i], order_index: i });
+          } catch (e) {
+            console.error('Failed to add course to path:', e);
+          }
+        }
+      }
+
       refetch();
-    } catch {
+    } catch (err) {
+      console.error('Failed to create path:', err);
       setLearningPaths(prev => [{ ...path, users: 0, completion: 0, lessons: 0, created: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) }, ...prev]);
     }
   };
@@ -86,9 +106,31 @@ export default function LearningPathsView({ autoOpenModal, onModalOpened }: Lear
 
   const handleDelete = async (index: number) => {
     const id = (learningPaths[index] as any).id;
-    if (id) { try { await adminApi.deleteLearningPath(id); refetch(); return; } catch {} }
-    setLearningPaths(prev => prev.filter((_, i) => i !== index));
+    if (!id) {
+      setLearningPaths(prev => prev.filter((_, i) => i !== index));
+      return;
+    }
+    setDeleteTarget({ index, name: learningPaths[index].name });
+    setDeleteError(null);
   };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    const id = (learningPaths[deleteTarget.index] as any).id;
+    setDeleteLoading(true);
+    setDeleteError(null);
+    try {
+      await adminApi.deleteLearningPath(id);
+      setDeleteTarget(null);
+      refetch();
+    } catch (err: any) {
+      setDeleteError(err.message ?? 'Failed to delete learning path');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  if (loading) return <LearningPathsSkeleton />;
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -108,6 +150,15 @@ export default function LearningPathsView({ autoOpenModal, onModalOpened }: Lear
         index={editPath?.index ?? null}
         onClose={() => setEditPath(null)}
         onSave={handleEditSave}
+      />
+      <ConfirmDeleteDialog
+        open={!!deleteTarget}
+        onClose={() => { setDeleteTarget(null); setDeleteError(null); }}
+        onConfirm={confirmDelete}
+        title={`Delete "${deleteTarget?.name ?? ''}"?`}
+        description="This learning path and all its phases will be permanently deleted. Enrolled users will lose access to this path."
+        loading={deleteLoading}
+        error={deleteError}
       />
 
       {/* Stats Cards */}

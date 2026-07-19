@@ -1,26 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Sparkles, BookOpen, Loader2 } from "lucide-react";
+import { adminApi } from "../../api";
 
 interface CreateLessonModalProps {
   open: boolean;
   onClose: () => void;
   aiMode?: boolean;
-  onSave?: (lesson: { title: string; skill: string; description: string; duration: string; status: string }) => void;
+  onSave?: (lesson: { title: string; skill: string; description: string; duration: string; status: string; course_id?: string }) => void;
 }
-
-const skillOptions = [
-  "Product Design",
-  "Digital Marketing",
-  "Frontend Development",
-  "AI Prompt Engineering",
-  "Data Analytics",
-  "Content Writing",
-];
 
 const aiTemplates = [
   { label: "Beginner Introduction", prompt: "Create a beginner-friendly introduction lesson" },
@@ -33,6 +25,7 @@ export default function CreateLessonModal({ open, onClose, aiMode = false, onSav
   const [mode, setMode] = useState<"manual" | "ai">(aiMode ? "ai" : "manual");
   const [title, setTitle] = useState("");
   const [skill, setSkill] = useState("");
+  const [courseId, setCourseId] = useState("");
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("10");
   const [status, setStatus] = useState("Draft");
@@ -40,6 +33,40 @@ export default function CreateLessonModal({ open, onClose, aiMode = false, onSav
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // Fetch skills from the API
+  const [skills, setSkills] = useState<{ id: string; name: string }[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(false);
+
+  // Fetch courses for the selected skill
+  const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
+  const [coursesLoading, setCoursesLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setSkillsLoading(true);
+      adminApi.getSkills()
+        .then((data: any) => {
+          const mapped = (Array.isArray(data) ? data : []).map((s: any) => ({ id: s.id, name: s.name }));
+          setSkills(mapped);
+        })
+        .catch(() => setSkills([]))
+        .finally(() => setSkillsLoading(false));
+    }
+  }, [open]);
+
+  // Fetch courses when skill changes
+  useEffect(() => {
+    if (!skill) { setCourses([]); setCourseId(""); return; }
+    setCoursesLoading(true);
+    adminApi.getCourses({ skill })
+      .then((data: any) => {
+        const mapped = (Array.isArray(data) ? data : []).map((c: any) => ({ id: c.id, title: c.title }));
+        setCourses(mapped);
+      })
+      .catch(() => setCourses([]))
+      .finally(() => setCoursesLoading(false));
+  }, [skill]);
 
   const handleGenerate = async () => {
     if (!aiPrompt.trim() || !skill) return;
@@ -55,9 +82,8 @@ export default function CreateLessonModal({ open, onClose, aiMode = false, onSav
   const handleSubmit = async () => {
     if (!title.trim() || !skill) return;
     setSaving(true);
-    await new Promise(r => setTimeout(r, 600));
-    onSave?.({ title, skill, description, duration: `${duration} mins`, status });
-    setTitle(""); setSkill(""); setDescription(""); setDuration("10"); setStatus("Draft");
+    onSave?.({ title, skill, description, duration: `${duration} mins`, status, course_id: courseId || undefined });
+    setTitle(""); setSkill(""); setCourseId(""); setDescription(""); setDuration("10"); setStatus("Draft");
     setAiPrompt(""); setGenerated(false); setMode(aiMode ? "ai" : "manual");
     setSaving(false);
     onClose();
@@ -102,18 +128,41 @@ export default function CreateLessonModal({ open, onClose, aiMode = false, onSav
         </div>
 
         <div className="space-y-4 py-1">
-          {/* Skill selector always visible */}
+          {/* Skill selector — fetched from DB */}
           <div className="space-y-2">
             <Label className="text-[#111827] dark:text-[#F9FAFB]">Skill Category <span className="text-[#EF4444]">*</span></Label>
             <select
               value={skill}
               onChange={e => setSkill(e.target.value)}
-              className="w-full border border-[#ECECEC] dark:border-[#2D2040] rounded-md px-3 py-2 text-sm bg-white dark:bg-[#1A1030] text-[#111827] dark:text-[#F9FAFB] focus:outline-none focus:ring-2 focus:ring-[#7B2CBF]"
+              disabled={skillsLoading}
+              className="w-full border border-[#ECECEC] dark:border-[#2D2040] rounded-md px-3 py-2 text-sm bg-white dark:bg-[#1A1030] text-[#111827] dark:text-[#F9FAFB] focus:outline-none focus:ring-2 focus:ring-[#7B2CBF] disabled:opacity-50"
             >
-              <option value="">Select skill category...</option>
-              {skillOptions.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">{skillsLoading ? "Loading skills..." : "Select skill category..."}</option>
+              {skills.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
             </select>
+            {!skillsLoading && skills.length === 0 && (
+              <p className="text-xs text-[#EF4444]">No skills found. Create a skill first in the Skills section.</p>
+            )}
           </div>
+
+          {/* Course selector */}
+          {skill && (
+            <div className="space-y-2">
+              <Label className="text-[#111827] dark:text-[#F9FAFB]">Course (optional)</Label>
+              <select
+                value={courseId}
+                onChange={e => setCourseId(e.target.value)}
+                disabled={coursesLoading}
+                className="w-full border border-[#ECECEC] dark:border-[#2D2040] rounded-md px-3 py-2 text-sm bg-white dark:bg-[#1A1030] text-[#111827] dark:text-[#F9FAFB] focus:outline-none focus:ring-2 focus:ring-[#7B2CBF] disabled:opacity-50"
+              >
+                <option value="">{coursesLoading ? "Loading courses..." : "No course (standalone lesson)"}</option>
+                {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
+              </select>
+              {!coursesLoading && skill && courses.length === 0 && (
+                <p className="text-xs text-[#6B7280]">No courses for this skill yet. You can create a course first or add this lesson to one later.</p>
+              )}
+            </div>
+          )}
 
           {mode === "ai" && !generated && (
             <>
@@ -235,7 +284,14 @@ export default function CreateLessonModal({ open, onClose, aiMode = false, onSav
               disabled={!title.trim() || !skill || saving}
               className="bg-[#7B2CBF] hover:bg-[#6A24A8] text-white"
             >
-              {saving ? "Saving..." : "Save Lesson"}
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Create Lesson"
+              )}
             </Button>
           )}
         </DialogFooter>

@@ -4,6 +4,7 @@ import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import SendInviteModal from "./modals/SendInviteModal";
+import { WaitlistSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
 
@@ -39,7 +40,7 @@ export default function WaitlistView() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "approved" | "rejected">("all");
 
-  const { data: apiData, refetch } = useApi(() => adminApi.getWaitlist());
+  const { data: apiData, loading, refetch } = useApi(() => adminApi.getWaitlist());
   const { data: impressionsData } = useApi(() => adminApi.getImpressionsStats());
 
   const fallback: any[] = [];
@@ -94,6 +95,8 @@ export default function WaitlistView() {
     return true;
   });
 
+  if (loading) return <WaitlistSkeleton />;
+
   return (
     <div className="space-y-5 md:space-y-6">
       <SendInviteModal open={inviteOpen} onClose={() => setInviteOpen(false)} prefilledEmails={inviteEmails} />
@@ -121,7 +124,7 @@ export default function WaitlistView() {
       {/* Actions + Search */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
-          <Button onClick={() => handleOpenInvite()} className="bg-[#7B2CBF] hover:bg-[#6A24A8] text-white">
+          <Button onClick={() => handleOpenInvite(waitlistUsers.map(u => u.email))} className="bg-[#7B2CBF] hover:bg-[#6A24A8] text-white">
             <Mail className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Send Invites</span>
             <span className="sm:hidden">Invite</span>

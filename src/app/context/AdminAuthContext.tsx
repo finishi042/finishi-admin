@@ -38,6 +38,7 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     try {
       const admin = await adminAuthApi.login({ email, password })
       setState({ admin, loading: false, error: null })
+      sessionStorage.setItem('finishi_session_start', String(Date.now()))
     } catch (e: any) {
       setState((s) => ({ ...s, loading: false, error: e.message ?? 'Login failed' }))
       throw e

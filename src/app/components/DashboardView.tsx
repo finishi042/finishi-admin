@@ -16,6 +16,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import LessonPreviewModal from "./modals/LessonPreviewModal";
 import EditLessonModal from "./modals/EditLessonModal";
+import { DashboardSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
 
@@ -47,8 +48,9 @@ interface DashboardViewProps {
 export default function DashboardView({ onQuickAction }: DashboardViewProps) {
   const [previewLesson, setPreviewLesson] = useState<{ lesson: DashLesson; index: number } | null>(null);
   const [editLesson, setEditLesson] = useState<{ lesson: DashLesson; index: number } | null>(null);
+  const [recentLessons, setRecentLessons] = useState<DashLesson[]>([]);
 
-  const { data: dashData } = useApi(() => adminApi.getDashboard());
+  const { data: dashData, loading } = useApi(() => adminApi.getDashboard());
 
   const kpis = dashData?.kpis;
   const kpiData = [
@@ -74,10 +76,6 @@ export default function DashboardView({ onQuickAction }: DashboardViewProps) {
     status: l.status === "published" ? "Published" : "Draft",
     views: l.view_count ?? 0,
   }));
-
-  const fallbackLessons: DashLesson[] = [];
-
-  const [recentLessons, setRecentLessons] = useState<DashLesson[]>([]);
 
   // Sync API lessons into state when they arrive
   useEffect(() => { if (apiLessons.length > 0) setRecentLessons(apiLessons); }, [dashData]);
@@ -105,6 +103,8 @@ export default function DashboardView({ onQuickAction }: DashboardViewProps) {
     progress: u.progress ?? 0,
     lastActive: u.lastActive ?? u.last_active ?? "—",
   });
+
+  if (loading) return <DashboardSkeleton />;
 
   return (
     <div className="space-y-4 md:space-y-6">

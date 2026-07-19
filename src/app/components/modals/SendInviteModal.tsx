@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -6,6 +6,7 @@ import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
 import { Mail, X, Plus, Send } from "lucide-react";
+import { adminApi } from "../../api";
 
 interface SendInviteModalProps {
   open: boolean;
@@ -13,15 +14,6 @@ interface SendInviteModalProps {
   prefilledEmails?: string[];
   onSend?: (emails: string[], message: string, skill: string) => void;
 }
-
-const skillOptions = [
-  "Product Design",
-  "Digital Marketing",
-  "Frontend Development",
-  "AI Prompt Engineering",
-  "Data Analytics",
-  "Content Writing",
-];
 
 const messageTemplates = [
   {
@@ -45,6 +37,26 @@ export default function SendInviteModal({ open, onClose, prefilledEmails = [], o
   const [message, setMessage] = useState(messageTemplates[0].text);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+
+  // Sync prefilledEmails when modal opens with new values
+  useEffect(() => {
+    if (open && prefilledEmails.length > 0) {
+      setEmails(prefilledEmails);
+    }
+  }, [open, prefilledEmails]);
+
+  // Fetch skills dynamically
+  const [skills, setSkills] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (open) {
+      adminApi.getSkills()
+        .then((data: any) => {
+          const mapped = (Array.isArray(data) ? data : []).map((s: any) => ({ id: s.id, name: s.name }));
+          setSkills(mapped);
+        })
+        .catch(() => setSkills([]));
+    }
+  }, [open]);
 
   const addEmail = () => {
     const e = emailInput.trim();
@@ -126,7 +138,7 @@ export default function SendInviteModal({ open, onClose, prefilledEmails = [], o
                 className="w-full border border-[#ECECEC] dark:border-[#2D2040] rounded-md px-3 py-2 text-sm bg-white dark:bg-[#1A1030] text-[#111827] dark:text-[#F9FAFB] focus:outline-none focus:ring-2 focus:ring-[#7B2CBF]"
               >
                 <option value="">No specific skill</option>
-                {skillOptions.map(s => <option key={s} value={s}>{s}</option>)}
+                {skills.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
               </select>
             </div>
 

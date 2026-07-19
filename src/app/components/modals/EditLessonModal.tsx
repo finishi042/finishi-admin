@@ -3,6 +3,7 @@ import { X, BookOpen } from "lucide-react";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
+import { adminApi } from "../../api";
 
 interface Lesson {
   title: string;
@@ -13,11 +14,6 @@ interface Lesson {
   status: string;
   views: number;
 }
-
-const SKILLS = [
-  "Product Design", "Digital Marketing", "Frontend Development",
-  "AI Prompt Engineering", "Data Analytics", "Content Writing",
-];
 
 const DURATIONS = ["5 mins", "8 mins", "10 mins", "12 mins", "14 mins", "15 mins", "18 mins", "20 mins", "25 mins", "30 mins"];
 
@@ -35,6 +31,23 @@ export default function EditLessonModal({ open, lesson, index, onClose, onSave }
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("10 mins");
   const [status, setStatus] = useState("Draft");
+
+  // Fetch skills dynamically
+  const [skills, setSkills] = useState<{ id: string; name: string }[]>([]);
+  const [skillsLoading, setSkillsLoading] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setSkillsLoading(true);
+      adminApi.getSkills()
+        .then((data: any) => {
+          const mapped = (Array.isArray(data) ? data : []).map((s: any) => ({ id: s.id, name: s.name }));
+          setSkills(mapped);
+        })
+        .catch(() => setSkills([]))
+        .finally(() => setSkillsLoading(false));
+    }
+  }, [open]);
 
   useEffect(() => {
     if (lesson) {
@@ -92,9 +105,11 @@ export default function EditLessonModal({ open, lesson, index, onClose, onSave }
             <select
               value={skill}
               onChange={e => setSkill(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-lg border border-[#ECECEC] dark:border-[#2D2040] bg-white dark:bg-[#1A1228] text-[#111827] dark:text-[#F9FAFB] focus:outline-none focus:ring-2 focus:ring-[#7B2CBF]/30"
+              disabled={skillsLoading}
+              className="w-full px-3 py-2 text-sm rounded-lg border border-[#ECECEC] dark:border-[#2D2040] bg-white dark:bg-[#1A1228] text-[#111827] dark:text-[#F9FAFB] focus:outline-none focus:ring-2 focus:ring-[#7B2CBF]/30 disabled:opacity-50"
             >
-              {SKILLS.map(s => <option key={s} value={s}>{s}</option>)}
+              <option value="">{skillsLoading ? "Loading..." : "Select skill..."}</option>
+              {skills.map(s => <option key={s.id} value={s.name}>{s.name}</option>)}
             </select>
           </div>
 

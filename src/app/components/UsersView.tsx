@@ -5,6 +5,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import AddUserModal from "./modals/AddUserModal";
 import ManageUserModal from "./modals/ManageUserModal";
+import { UsersSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
 
@@ -63,7 +64,7 @@ export default function UsersView({ autoOpenModal, onModalOpened }: UsersViewPro
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [search, setSearch] = useState("");
 
-  const { data: apiData, refetch } = useApi(() => adminApi.getUsers({ search: search || undefined }), [search]);
+  const { data: apiData, loading, refetch } = useApi(() => adminApi.getUsers({ search: search || undefined }), [search]);
 
   const apiUsers: User[] = (apiData ?? []).map((u: any, i: number) => ({
     name: u.full_name ?? u.name ?? "Unknown",
@@ -125,6 +126,8 @@ export default function UsersView({ autoOpenModal, onModalOpened }: UsersViewPro
   ];
 
   const topUser = [...users].sort((a, b) => b.lessonsCompleted - a.lessonsCompleted)[0];
+
+  if (loading) return <UsersSkeleton />;
 
   return (
     <div className="space-y-5 md:space-y-6">

@@ -1,6 +1,8 @@
+import { useEffect, useState } from "react";
 import { X, SlidersHorizontal } from "lucide-react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
+import { adminApi } from "../../api";
 
 export interface LessonFilters {
   skill: string;
@@ -18,11 +20,24 @@ interface FilterLessonsPanelProps {
   onReset: () => void;
 }
 
-const SKILLS = ["All Skills", "Product Design", "Digital Marketing", "Frontend Development", "AI Prompt Engineering", "Data Analytics", "Content Writing"];
 const DURATIONS = ["Any Duration", "< 10 mins", "10–15 mins", "15–20 mins", "> 20 mins"];
 const SORT_OPTIONS = ["Newest First", "Oldest First", "Most Views", "A–Z", "Z–A"];
 
 export default function FilterLessonsPanel({ open, filters, onChange, onClose, onApply, onReset }: FilterLessonsPanelProps) {
+  const [skills, setSkills] = useState<string[]>(["All Skills"]);
+
+  // Fetch skills dynamically when panel opens
+  useEffect(() => {
+    if (open) {
+      adminApi.getSkills()
+        .then((data: any) => {
+          const names = (Array.isArray(data) ? data : []).map((s: any) => s.name as string);
+          setSkills(["All Skills", ...names]);
+        })
+        .catch(() => setSkills(["All Skills"]));
+    }
+  }, [open]);
+
   if (!open) return null;
 
   const set = (key: keyof LessonFilters, value: string) => onChange({ ...filters, [key]: value });
@@ -49,7 +64,7 @@ export default function FilterLessonsPanel({ open, filters, onChange, onClose, o
           <div className="space-y-2">
             <Label className="text-sm font-medium text-[#374151] dark:text-[#D1D5DB]">Skill Category</Label>
             <div className="space-y-1.5">
-              {SKILLS.map(s => (
+              {skills.map(s => (
                 <label key={s} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-[#FAFAFC] dark:hover:bg-[#1A1228] cursor-pointer">
                   <input
                     type="radio"

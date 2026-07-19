@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Plus, Search, Calendar, Clock, Users, Globe,
   Edit, Trash2, ChevronDown, X, Check,
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { adminApi } from "../api";
 
 /* ─── Types ─── */
 type EventType = "webinar" | "workshop" | "live-session" | "bootcamp";
@@ -44,10 +45,6 @@ const EVENT_TYPES = [
   { value: "bootcamp" as EventType,     label: "Bootcamp",      icon: Zap,       color: "#3B82F6", gradient: "from-[#3B82F6] to-[#60A5FA]" },
 ];
 
-const SKILLS = [
-  "Product Design", "Digital Marketing", "Frontend Development",
-  "AI Prompt Engineering", "Data Analytics", "Content Writing",
-];
 const PLATFORMS = ["Zoom", "Google Meet", "Microsoft Teams", "YouTube Live", "Twitter Spaces", "Physical Venue"];
 
 const COVER_IMAGES: Record<EventType, string> = {
@@ -111,6 +108,19 @@ function EventModal({ open, onClose, onSave, editing }: EventModalProps) {
   const [form, setForm] = useState<FormState>(editing ? { ...editing } : emptyForm);
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof FormState>(k: K, v: FormState[K]) => setForm(f => ({ ...f, [k]: v }));
+
+  // Fetch skills dynamically
+  const [skillsList, setSkillsList] = useState<string[]>([]);
+  useEffect(() => {
+    if (open) {
+      adminApi.getSkills()
+        .then((data: any) => {
+          const names = (Array.isArray(data) ? data : []).map((s: any) => s.name as string);
+          setSkillsList(names);
+        })
+        .catch(() => setSkillsList([]));
+    }
+  }, [open]);
 
   const handleTypeChange = (type: EventType) => {
     set("type", type);
@@ -190,7 +200,7 @@ function EventModal({ open, onClose, onSave, editing }: EventModalProps) {
               <select value={form.skill} onChange={e => set("skill", e.target.value)}
                 className="w-full appearance-none pl-3 pr-10 py-2.5 border border-[#ECECEC] dark:border-[#2D2040] rounded-lg bg-white dark:bg-[#1A1030] text-[#111827] dark:text-[#F9FAFB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7B2CBF]">
                 <option value="">Select a skill...</option>
-                {SKILLS.map(s => <option key={s}>{s}</option>)}
+                {skillsList.map(s => <option key={s}>{s}</option>)}
               </select>
               <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280] pointer-events-none" />
             </div>

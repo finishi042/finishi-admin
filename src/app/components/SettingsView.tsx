@@ -1,6 +1,6 @@
 import { useState } from "react";
 import {
-  User, Bell, Shield, Palette, Globe, Mail, Key, Database,
+  User, Bell, Shield, Palette, Globe, Mail, Key, Database, CreditCard,
   ChevronRight, Sun, Moon, Monitor, Check, Save, Eye, EyeOff,
   Smartphone, LogOut, AlertTriangle, Upload, Trash2
 } from "lucide-react";
@@ -9,6 +9,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { useTheme } from "../context/ThemeContext";
+import PaymentSettingsView from "./PaymentSettingsView";
 
 type SettingsSection =
   | "profile"
@@ -16,6 +17,7 @@ type SettingsSection =
   | "notifications"
   | "security"
   | "platform"
+  | "payments"
   | "integrations"
   | "danger";
 
@@ -25,6 +27,7 @@ const NAV_ITEMS: { id: SettingsSection; label: string; icon: React.ElementType; 
   { id: "notifications", label: "Notifications", icon: Bell, desc: "Alerts and email settings" },
   { id: "security", label: "Security", icon: Shield, desc: "Password and access control" },
   { id: "platform", label: "Platform", icon: Globe, desc: "General platform configuration" },
+  { id: "payments", label: "Payments", icon: CreditCard, desc: "Payment gateways & routing" },
   { id: "integrations", label: "Integrations", icon: Database, desc: "API keys and connections" },
   { id: "danger", label: "Danger Zone", icon: AlertTriangle, desc: "Irreversible actions" },
 ];
@@ -691,6 +694,7 @@ export default function SettingsView() {
       case "notifications": return <NotificationsSection />;
       case "security": return <SecuritySection />;
       case "platform": return <PlatformSection />;
+      case "payments": return <PaymentSettingsView />;
       case "integrations": return <IntegrationsSection />;
       case "danger": return <DangerSection />;
     }

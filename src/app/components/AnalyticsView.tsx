@@ -1,10 +1,13 @@
 import { Users, UserCheck, Clock, Target, TrendingUp, Calendar } from "lucide-react";
 import { Card } from "./ui/card";
+import { AnalyticsSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
 
 export default function AnalyticsView() {
-  const { data: apiData } = useApi(() => adminApi.getAnalytics());
+  const { data: apiData, loading } = useApi(() => adminApi.getAnalytics());
+
+  if (loading) return <AnalyticsSkeleton />;
 
   const platformMetrics = [
     { label: "Daily Active Users",     value: apiData ? String(apiData.active_users ?? 0)  : "—",   change: "—", icon: Users,      description: "Users active in the last 24 hours" },
