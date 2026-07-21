@@ -251,6 +251,49 @@ export const adminApi = {
   deleteSubscriptionPlan: (id: string) => del<any>(`/admin/subscription-plans/${id}`),
   reorderSubscriptionPlans: (order: { id: string; sort_order: number }[]) =>
     post<any>('/admin/subscription-plans/reorder', { order }),
+
+  // Monitoring
+  getMonitoringSummary: (hours?: number) => {
+    const q = hours ? `?hours=${hours}` : ''
+    return get<any>(`/admin/monitoring/summary${q}`)
+  },
+  getMonitoringTimeseries: (params?: { hours?: number; bucket?: string; direction?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.hours) q.set('hours', String(params.hours))
+    if (params?.bucket) q.set('bucket', params.bucket)
+    if (params?.direction) q.set('direction', params.direction)
+    return get<any>(`/admin/monitoring/timeseries?${q}`)
+  },
+  getMonitoringTopEndpoints: (params?: { hours?: number; limit?: number }) => {
+    const q = new URLSearchParams()
+    if (params?.hours) q.set('hours', String(params.hours))
+    if (params?.limit) q.set('limit', String(params.limit))
+    return get<any>(`/admin/monitoring/top-endpoints?${q}`)
+  },
+  getMonitoringProviders: (hours?: number) => {
+    const q = hours ? `?hours=${hours}` : ''
+    return get<any>(`/admin/monitoring/providers${q}`)
+  },
+  getMonitoringErrors: (params?: { hours?: number; page?: number; limit?: number; direction?: string; provider?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.hours) q.set('hours', String(params.hours))
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.direction) q.set('direction', params.direction)
+    if (params?.provider) q.set('provider', params.provider)
+    return get<any>(`/admin/monitoring/errors?${q}`)
+  },
+  getMonitoringLogs: (params?: { page?: number; limit?: number; direction?: string; provider?: string; method?: string; is_error?: string; path?: string }) => {
+    const q = new URLSearchParams()
+    if (params?.page) q.set('page', String(params.page))
+    if (params?.limit) q.set('limit', String(params.limit))
+    if (params?.direction) q.set('direction', params.direction)
+    if (params?.provider) q.set('provider', params.provider)
+    if (params?.method) q.set('method', params.method)
+    if (params?.is_error) q.set('is_error', params.is_error)
+    if (params?.path) q.set('path', params.path)
+    return get<any>(`/admin/monitoring/logs?${q}`)
+  },
 }
 
 // ── Admin Notifications API ───────────────────────────────────────────────

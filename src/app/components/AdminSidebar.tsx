@@ -16,6 +16,7 @@ import {
   Clock,
   ChevronDown,
   Cpu,
+  Activity,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 
@@ -44,6 +45,7 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
   ];
 
   const managementItems = [
+    { id: "monitoring", label: "Monitoring", icon: Activity },
     { id: "waitlist", label: "Waitlist", icon: Clock },
     { id: "settings", label: "Settings", icon: Settings },
   ];

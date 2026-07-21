@@ -17,6 +17,7 @@ import EventsView from "./components/EventsView";
 import TechEventsView from "./components/TechEventsView";
 import LogoutScreen from "./components/LogoutScreen";
 import NotificationsView from "./components/NotificationsView";
+import RequestMonitorView from "./components/RequestMonitorView";
 
 function AppInner() {
   const { isDark } = useTheme();
@@ -66,6 +67,7 @@ function AppInner() {
       case "events":      return { title: "Events", subtitle: "Manage webinars, workshops, and live sessions." };
       case "techEvents":     return { title: "Tech Events", subtitle: "Conferences, hackathons, meetups, and tech talks." };
       case "notifications":  return { title: "Notifications", subtitle: "All your alerts, updates, and activity in one place." };
+      case "monitoring":     return { title: "Request Monitor", subtitle: "Track API requests, provider health, and error rates." };
       default:               return { title: "Admin Dashboard", subtitle: "Monitor learners, content, and platform growth." };
     }
   };
@@ -96,6 +98,8 @@ function AppInner() {
         return <TechEventsView />;
       case "notifications":
         return <NotificationsView onNavigate={handleTabChange} />;
+      case "monitoring":
+        return <RequestMonitorView />;
       default:
         return <DashboardView onQuickAction={handleQuickAction} />;
     }
