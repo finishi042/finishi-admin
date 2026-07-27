@@ -12,20 +12,13 @@ import { toast } from "sonner";
 /* ─── Avatar pool ─── */
 const AVATAR_POOL: string[] = [];
 
-function WaitlistAvatar({ src, name }: { src: string; name: string }) {
-  const [failed, setFailed] = useState(false);
-  const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
+function WaitlistAvatar({ email }: { email: string }) {
+  const initials = email.slice(0, 2).toUpperCase();
 
-  if (!src || failed) {
-    return (
-      <div className="w-9 h-9 rounded-full bg-[#7B2CBF] flex items-center justify-center shrink-0">
-        <span className="text-white text-xs font-semibold">{initials}</span>
-      </div>
-    );
-  }
   return (
-    <img src={src} alt={name} onError={() => setFailed(true)}
-      className="w-9 h-9 rounded-full object-cover ring-2 ring-white dark:ring-[#160D20] shrink-0" />
+    <div className="w-9 h-9 rounded-full bg-[#7B2CBF] flex items-center justify-center shrink-0">
+      <span className="text-white text-xs font-semibold">{initials}</span>
+    </div>
   );
 }
 
@@ -47,12 +40,10 @@ export default function WaitlistView() {
   const fallback: any[] = [];
 
   const apiUsers = (apiData as any[] | null)?.map((u: any, i: number) => ({
-    name: u.full_name ?? u.name ?? "Unknown",
     email: u.email,
     joined: u.created_at ? new Date(u.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
     interest: u.learning_goal ?? u.interest ?? "—",
     status: u.status ?? "pending",
-    avatar: AVATAR_POOL[i % AVATAR_POOL.length],
     id: u.id,
   }));
 
@@ -102,7 +93,7 @@ export default function WaitlistView() {
 
   const filtered = waitlistUsers.filter(u => {
     if (statusFilter !== "all" && u.status !== statusFilter) return false;
-    if (search && !u.name.toLowerCase().includes(search.toLowerCase()) && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !u.email.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
   });
 
@@ -155,7 +146,7 @@ export default function WaitlistView() {
         <div className="flex gap-2 w-full sm:w-auto">
           <div className="relative flex-1 sm:w-56">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6B7280]" />
-            <input type="text" placeholder="Search name or email..." value={search} onChange={e => setSearch(e.target.value)}
+            <input type="text" placeholder="Search email..." value={search} onChange={e => setSearch(e.target.value)}
               className="pl-9 pr-4 py-2 w-full border border-[#ECECEC] dark:border-[#2D2040] rounded-lg bg-white dark:bg-[#1A1030] text-[#111827] dark:text-[#F9FAFB] text-sm focus:outline-none focus:ring-2 focus:ring-[#7B2CBF] placeholder:text-[#6B7280]" />
           </div>
           <div className="flex gap-1 border border-[#ECECEC] dark:border-[#2D2040] rounded-lg p-1 bg-white dark:bg-[#160D20]">
@@ -178,15 +169,14 @@ export default function WaitlistView() {
           return (
             <Card key={index} className="p-4 border border-[#ECECEC] dark:border-[#2D2040] bg-white dark:bg-[#160D20]">
               <div className="flex items-start gap-3 mb-3">
-                <WaitlistAvatar src={user.avatar} name={user.name} />
+                <WaitlistAvatar email={user.email} />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-medium text-sm text-[#111827] dark:text-[#F9FAFB]">{user.name}</p>
+                    <p className="font-medium text-sm text-[#111827] dark:text-[#F9FAFB]">{user.email}</p>
                     <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${cfg.badge}`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />{cfg.label}
                     </span>
                   </div>
-                  <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF]">{user.email}</p>
                   <p className="text-xs text-[#6B7280] dark:text-[#9CA3AF] mt-0.5 truncate max-w-[180px]" title={user.interest}>{user.interest} · {user.joined}</p>
                 </div>
               </div>
@@ -216,7 +206,7 @@ export default function WaitlistView() {
           <table className="w-full min-w-[700px]">
             <thead>
               <tr className="border-b border-[#ECECEC] dark:border-[#2D2040] bg-[#FAFAFC] dark:bg-[#110C1A]">
-                {["Name", "Email", "Joined", "Learning Goal", "Status", "Actions"].map((h, i) => (
+                {["Email", "Joined", "Learning Goal", "Status", "Actions"].map((h, i) => (
                   <th key={i} className="text-left py-3 px-4 text-xs font-medium text-[#6B7280] dark:text-[#9CA3AF] uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
@@ -228,11 +218,10 @@ export default function WaitlistView() {
                   <tr key={index} className="border-b border-[#ECECEC] dark:border-[#2D2040] hover:bg-[#FAFAFC] dark:hover:bg-[#1A1228] transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="flex items-center gap-3">
-                        <WaitlistAvatar src={user.avatar} name={user.name} />
-                        <span className="font-medium text-[#111827] dark:text-[#F9FAFB] text-sm">{user.name}</span>
+                        <WaitlistAvatar email={user.email} />
+                        <span className="font-medium text-[#111827] dark:text-[#F9FAFB] text-sm">{user.email}</span>
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-sm text-[#6B7280] dark:text-[#9CA3AF]">{user.email}</td>
                     <td className="py-3.5 px-4 text-sm text-[#6B7280] dark:text-[#9CA3AF] whitespace-nowrap">{user.joined}</td>
                     <td className="py-3.5 px-4">
                       <Badge className="bg-[#F6EEFF] dark:bg-[#1E1030] text-[#7B2CBF] dark:text-[#C77DFF] border-0 text-xs max-w-[120px] truncate cursor-default" title={user.interest}>{user.interest}</Badge>

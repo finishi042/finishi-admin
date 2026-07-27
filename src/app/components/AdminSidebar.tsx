@@ -11,7 +11,6 @@ import {
   Settings,
   UserCog,
   LogOut,
-  GraduationCap,
   Calendar,
   X,
   Clock,
@@ -20,6 +19,7 @@ import {
   Activity,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
+import finishiLogo from "../../imports/finishi-logo.svg";
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -94,9 +94,7 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
       {/* Logo */}
       <div className="p-6 border-b border-[#ECECEC] dark:border-[#2D2040] flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-[#7B2CBF] rounded-lg flex items-center justify-center">
-            <GraduationCap className="w-5 h-5 text-white" />
-          </div>
+          <img src={finishiLogo} alt="Finishi" className="w-8 h-8" />
           <span className="font-semibold text-lg text-[#111827] dark:text-[#F9FAFB]">Finishi</span>
           <span className="text-xs px-1.5 py-0.5 bg-[#F6EEFF] dark:bg-[#1E1030] text-[#7B2CBF] rounded-md">Admin</span>
         </div>

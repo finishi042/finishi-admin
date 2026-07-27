@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { LogOut, CheckCircle2, ArrowRight, Shield, Sparkles } from "lucide-react";
+import { LogOut, CheckCircle2, ArrowRight, Shield } from "lucide-react";
 import { Button } from "./ui/button";
+import finishiLogo from "../../imports/finishi-logo.svg";
 
 interface LogoutScreenProps {
   onCancel: () => void;
@@ -66,9 +67,7 @@ export default function LogoutScreen({ onCancel, onConfirmLogout, adminName, adm
         {stage === "confirm" && (
           <div className="animate-in fade-in zoom-in-95 duration-300">
             {/* Logo mark */}
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#7B2CBF] to-[#C77DFF] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-[#7B2CBF]/40">
-              <Sparkles className="w-10 h-10 text-white" />
-            </div>
+            <img src={finishiLogo} alt="Finishi" className="w-20 h-20 mx-auto mb-8" />
 
             <h1 className="text-2xl font-bold text-white mb-2">Leaving so soon?</h1>
             <p className="text-[#9CA3AF] text-sm leading-relaxed mb-8">
@@ -127,9 +126,7 @@ export default function LogoutScreen({ onCancel, onConfirmLogout, adminName, adm
         {/* ── LOGGING OUT STAGE ── */}
         {stage === "loggingOut" && (
           <div className="animate-in fade-in duration-300">
-            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#7B2CBF] to-[#C77DFF] flex items-center justify-center mx-auto mb-8 shadow-2xl shadow-[#7B2CBF]/40">
-              <LogOut className="w-10 h-10 text-white animate-pulse" />
-            </div>
+            <img src={finishiLogo} alt="Finishi" className="w-20 h-20 mx-auto mb-8 animate-pulse" />
             <h2 className="text-xl font-bold text-white mb-2">Logging out…</h2>
             <p className="text-[#9CA3AF] text-sm mb-8">Clearing your session securely</p>
 

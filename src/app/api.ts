@@ -86,7 +86,7 @@ export const adminAuthApi = {
     }
   },
 
-  me: () => get<AdminUser>('/auth/me'),
+  me: () => get<AdminUser>('/auth/admin/me'),
 
   /** Super-admin only: register a new admin */
   register: (body: { email: string; password: string; full_name: string; role?: string }) =>

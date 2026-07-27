@@ -20,6 +20,7 @@ import TechEventsView from "./components/TechEventsView";
 import LogoutScreen from "./components/LogoutScreen";
 import NotificationsView from "./components/NotificationsView";
 import RequestMonitorView from "./components/RequestMonitorView";
+import finishiLogo from "../imports/finishi-logo.svg";
 
 function AppInner() {
   const { isDark } = useTheme();
@@ -121,9 +122,7 @@ function AppInner() {
           <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-[#C77DFF]/15 blur-3xl" />
         </div>
         <div className="relative z-10 text-center px-6 max-w-sm w-full animate-in fade-in zoom-in-95 duration-500">
-          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7B2CBF] to-[#C77DFF] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-[#7B2CBF]/40">
-            <span className="text-white font-black text-xl">F</span>
-          </div>
+          <img src={finishiLogo} alt="Finishi" className="w-16 h-16 mx-auto mb-6" />
           <h2 className="text-2xl font-bold text-white mb-2">Finishi Admin</h2>
           <p className="text-[#9CA3AF] text-sm mb-8">You have been logged out. Sign back in to continue.</p>
           <button
@@ -332,9 +331,7 @@ function AuthGate() {
         </div>
         <div className="relative z-10 w-full max-w-sm px-6">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7B2CBF] to-[#C77DFF] flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-[#7B2CBF]/40">
-              <span className="text-white font-black text-lg">F</span>
-            </div>
+            <img src={finishiLogo} alt="Finishi" className="w-14 h-14 mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-white">Finishi Admin</h1>
             <p className="text-[#9CA3AF] text-sm mt-1">
               {view === 'login' && "Sign in to manage the platform"}
