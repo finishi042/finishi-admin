@@ -352,7 +352,7 @@ function AuthGate() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@finishi.com"
+                  placeholder="admin@finishi.org"
                   required
                   className="w-full px-3.5 py-2.5 rounded-lg border border-white/[0.12] bg-white/[0.06] text-white text-sm placeholder:text-white/30 outline-none focus:border-[#7B2CBF]"
                 />
@@ -418,7 +418,7 @@ function AuthGate() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="admin@finishi.com"
+                  placeholder="admin@finishi.org"
                   required
                   className="w-full px-3.5 py-2.5 rounded-lg border border-white/[0.12] bg-white/[0.06] text-white text-sm placeholder:text-white/30 outline-none focus:border-[#7B2CBF]"
                 />

@@ -72,7 +72,7 @@ function SettingRow({ label, description, children }: { label: string; descripti
 function PlatformSection() {
   const [platformName, setPlatformName] = useState("Finishi");
   const [tagline, setTagline] = useState("AI-powered micro-learning for Africa");
-  const [supportEmail, setSupportEmail] = useState("support@finishi.com");
+  const [supportEmail, setSupportEmail] = useState("support@finishi.org");
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [registrationOpen, setRegistrationOpen] = useState(true);
   const [waitlistMode, setWaitlistMode] = useState(true);
@@ -302,7 +302,7 @@ function AdminsSection() {
                     type="email"
                     value={newAdmin.email}
                     onChange={e => setNewAdmin(p => ({ ...p, email: e.target.value }))}
-                    placeholder="admin@finishi.com"
+                    placeholder="admin@finishi.org"
                     className="border-[#ECECEC] dark:border-[#2D2040] dark:bg-[#1A1030] dark:text-[#F9FAFB]"
                   />
                 </div>
