@@ -3,7 +3,20 @@
  * Uses `credentials: 'include'` so the browser sends/receives httpOnly cookies automatically.
  * No localStorage token handling needed.
  */
-const BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:3000/api/v1'
+function getApiBase(): string {
+  // Use environment variable if set
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL
+  }
+  // Production fallback based on hostname
+  if (typeof window !== 'undefined' && window.location.hostname.includes('finishi.org')) {
+    return 'https://api.finishi.org/api/v1'
+  }
+  // Local development fallback
+  return 'http://localhost:3000/api/v1'
+}
+
+const BASE = getApiBase()
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   // Only set Content-Type for requests that have a body
