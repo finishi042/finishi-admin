@@ -71,14 +71,20 @@ export default function SendInviteModal({ open, onClose, prefilledEmails = [], o
   const handleSend = async () => {
     if (emails.length === 0) return;
     setSending(true);
-    await new Promise(r => setTimeout(r, 1200));
-    onSend?.(emails, message, skill);
-    setSent(true);
-    setSending(false);
-    await new Promise(r => setTimeout(r, 1500));
-    setSent(false);
-    setEmails([]); setEmailInput(""); setSkill(""); setMessage(messageTemplates[0].text);
-    onClose();
+    try {
+      await adminApi.sendInvites(emails, { message, skill: skill || undefined });
+      onSend?.(emails, message, skill);
+      setSent(true);
+      setTimeout(() => {
+        setSent(false);
+        setEmails([]); setEmailInput(""); setSkill(""); setMessage(messageTemplates[0].text);
+        onClose();
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to send invites:', err);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (

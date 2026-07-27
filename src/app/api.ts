@@ -177,6 +177,27 @@ export const adminApi = {
   // Analytics
   getAnalytics: () => get<any>('/admin/analytics'),
 
+  // Email
+  sendEmail: (body: {
+    emails: string[]
+    subject: string
+    message: string
+    template?: 'general' | 'invite' | 'welcome'
+    cta_label?: string
+    cta_url?: string
+    skill?: string
+  }) => post<{ sent: number; failed: number; total: number; errors?: string[] }>('/admin/email/send', body),
+
+  sendUsersEmail: (body: {
+    emails: string[]
+    subject: string
+    message: string
+    template?: 'general' | 'invite' | 'welcome'
+    cta_label?: string
+    cta_url?: string
+    skill?: string
+  }) => post<{ sent: number; failed: number; total: number; errors?: string[] }>('/admin/users/email', body),
+
   // Waitlist
   getWaitlist: (params?: { status?: string; search?: string }) => {
     const q = new URLSearchParams()
@@ -186,7 +207,8 @@ export const adminApi = {
   },
   updateWaitlistStatus: (id: string, status: 'approved' | 'rejected' | 'pending') =>
     patch<any>(`/admin/waitlist/${id}/status`, { status }),
-  sendInvites: (emails: string[]) => post<any>('/admin/waitlist/invite', { emails }),
+  sendInvites: (emails: string[], opts?: { message?: string; subject?: string; skill?: string }) =>
+    post<any>('/admin/waitlist/invite', { emails, ...opts }),
 
   // Events
   getEvents: (params?: { status?: string; type?: string; search?: string }) => {

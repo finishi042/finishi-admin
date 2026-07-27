@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Users, UserPlus, Download, Settings, Search, TrendingUp, BookOpen } from "lucide-react";
+import { Users, UserPlus, Download, Settings, Search, TrendingUp, BookOpen, Mail } from "lucide-react";
 import { Card } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import AddUserModal from "./modals/AddUserModal";
 import ManageUserModal from "./modals/ManageUserModal";
+import SendEmailModal from "./modals/SendEmailModal";
 import { UsersSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
@@ -63,6 +64,8 @@ export default function UsersView({ autoOpenModal, onModalOpened }: UsersViewPro
   const [manageUserOpen, setManageUserOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [search, setSearch] = useState("");
+  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailRecipients, setEmailRecipients] = useState<string[]>([]);
 
   const { data: apiData, loading, refetch } = useApi(() => adminApi.getUsers({ search: search || undefined }), [search]);
 
@@ -90,6 +93,8 @@ export default function UsersView({ autoOpenModal, onModalOpened }: UsersViewPro
   }, [autoOpenModal]);
 
   const handleManageUser = (user: User) => { setSelectedUser(user); setManageUserOpen(true); };
+
+  const handleOpenEmail = (emails: string[]) => { setEmailRecipients(emails); setEmailOpen(true); };
 
   const handleAddUser = async (userData: { name: string; email: string; role: string; skills: string[] }) => {
     try {
@@ -137,6 +142,13 @@ export default function UsersView({ autoOpenModal, onModalOpened }: UsersViewPro
         onClose={() => setManageUserOpen(false)}
         user={selectedUser}
         onUpdate={handleUpdateUser}
+      />
+      <SendEmailModal
+        open={emailOpen}
+        onClose={() => setEmailOpen(false)}
+        prefilledEmails={emailRecipients}
+        title="Send Email to Users"
+        audience="users"
       />
 
       {/* Stats */}
@@ -186,6 +198,15 @@ export default function UsersView({ autoOpenModal, onModalOpened }: UsersViewPro
             <UserPlus className="w-4 h-4 mr-2" />
             <span className="hidden sm:inline">Add User</span>
             <span className="sm:hidden">Add</span>
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => handleOpenEmail(users.map(u => u.email))}
+            className="border-[#ECECEC] dark:border-[#2D2040] text-[#6B7280] dark:text-[#9CA3AF]"
+          >
+            <Mail className="w-4 h-4 mr-2" />
+            <span className="hidden sm:inline">Email All</span>
+            <span className="sm:hidden">Email</span>
           </Button>
           <Button variant="outline" className="border-[#ECECEC] dark:border-[#2D2040] text-[#6B7280] dark:text-[#9CA3AF]">
             <Download className="w-4 h-4 mr-2" />
@@ -263,11 +284,20 @@ export default function UsersView({ autoOpenModal, onModalOpened }: UsersViewPro
                     </span>
                   </td>
                   <td className="py-3.5 px-4">
-                    <button onClick={() => handleManageUser(user)}
-                      className="p-1.5 hover:bg-[#F6EEFF] dark:hover:bg-[#1E1030] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                      title="Manage user">
-                      <Settings className="w-4 h-4 text-[#6B7280] dark:text-[#9CA3AF]" />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleOpenEmail([user.email])}
+                        className="p-1.5 hover:bg-[#F6EEFF] dark:hover:bg-[#1E1030] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        title="Send email"
+                      >
+                        <Mail className="w-4 h-4 text-[#7B2CBF] dark:text-[#C77DFF]" />
+                      </button>
+                      <button onClick={() => handleManageUser(user)}
+                        className="p-1.5 hover:bg-[#F6EEFF] dark:hover:bg-[#1E1030] rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                        title="Manage user">
+                        <Settings className="w-4 h-4 text-[#6B7280] dark:text-[#9CA3AF]" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
