@@ -7,6 +7,7 @@ import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
 import { Mail, X, Plus, Send } from "lucide-react";
 import { adminApi } from "../../api";
+import { toast } from "sonner";
 
 interface SendInviteModalProps {
   open: boolean;
@@ -74,14 +75,16 @@ export default function SendInviteModal({ open, onClose, prefilledEmails = [], o
     try {
       await adminApi.sendInvites(emails, { message, skill: skill || undefined });
       onSend?.(emails, message, skill);
+      toast.success(`${emails.length} invite${emails.length !== 1 ? "s" : ""} sent successfully`);
       setSent(true);
       setTimeout(() => {
         setSent(false);
         setEmails([]); setEmailInput(""); setSkill(""); setMessage(messageTemplates[0].text);
         onClose();
       }, 1500);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Failed to send invites:', err);
+      toast.error(err?.message || "Failed to send invites. Please try again.");
     } finally {
       setSending(false);
     }

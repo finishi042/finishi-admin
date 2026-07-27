@@ -7,6 +7,7 @@ import SendInviteModal from "./modals/SendInviteModal";
 import { WaitlistSkeleton } from "./LoadingSkeleton";
 import { useApi } from "../hooks/useApi";
 import { adminApi } from "../api";
+import { toast } from "sonner";
 
 /* ─── Avatar pool ─── */
 const AVATAR_POOL: string[] = [];
@@ -15,7 +16,7 @@ function WaitlistAvatar({ src, name }: { src: string; name: string }) {
   const [failed, setFailed] = useState(false);
   const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
-  if (failed) {
+  if (!src || failed) {
     return (
       <div className="w-9 h-9 rounded-full bg-[#7B2CBF] flex items-center justify-center shrink-0">
         <span className="text-white text-xs font-semibold">{initials}</span>
@@ -85,7 +86,17 @@ export default function WaitlistView() {
 
   const handleBulkInvite = async () => {
     const emails = waitlistUsers.filter(u => u.status === "pending").map(u => u.email);
-    try { await adminApi.sendInvites(emails); refetch(); } catch {}
+    if (emails.length === 0) {
+      toast.info("No pending users to invite");
+      return;
+    }
+    try {
+      await adminApi.sendInvites(emails);
+      toast.success(`${emails.length} invite${emails.length !== 1 ? "s" : ""} sent successfully`);
+      refetch();
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to send invites");
+    }
     handleOpenInvite(emails);
   };
 

@@ -78,6 +78,18 @@ export const adminAuthApi = {
   /** Super-admin only: register a new admin */
   register: (body: { email: string; password: string; full_name: string; role?: string }) =>
     post<AdminUser>('/auth/admin/register', body),
+
+  /** Request password reset email */
+  forgotPassword: (email: string) =>
+    post<{ message: string }>('/auth/admin/forgot-password', { email }),
+
+  /** Reset password with OTP */
+  resetPassword: (body: { email: string; otp: string; password: string }) =>
+    post<{ message: string }>('/auth/admin/reset-password', body),
+
+  /** Update password (requires current password) */
+  updatePassword: (body: { current_password: string; new_password: string }) =>
+    post<{ message: string }>('/auth/admin/update-password', body),
 }
 
 // ── Admin Dashboard API ───────────────────────────────────────────────────

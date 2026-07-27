@@ -41,7 +41,7 @@ function UserAvatar({ src, name, size = "md" }: { src: string; name: string; siz
   const sizeClass = size === "sm" ? "w-8 h-8 text-xs" : size === "lg" ? "w-12 h-12" : "w-10 h-10 text-sm";
   const initials = name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase();
 
-  if (failed) {
+  if (!src || failed) {
     return (
       <div className={`${sizeClass} rounded-full bg-[#7B2CBF] flex items-center justify-center shrink-0`}>
         <span className="text-white font-semibold">{initials}</span>

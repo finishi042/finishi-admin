@@ -7,6 +7,7 @@ import { Textarea } from "../ui/textarea";
 import { Badge } from "../ui/badge";
 import { Mail, X, Plus, Send, CheckCircle } from "lucide-react";
 import { adminApi } from "../../api";
+import { toast } from "sonner";
 
 type Template = "general" | "invite" | "welcome";
 
@@ -105,6 +106,13 @@ export default function SendEmailModal({
           ? await adminApi.sendInvites(emails, { message, subject })
           : await adminApi.sendUsersEmail(payload);
       setResult({ sent: res?.sent ?? emails.length, failed: res?.failed ?? 0 });
+      const sentCount = res?.sent ?? emails.length;
+      const failedCount = res?.failed ?? 0;
+      if (failedCount > 0) {
+        toast.warning(`${sentCount} email${sentCount !== 1 ? "s" : ""} sent, ${failedCount} failed`);
+      } else {
+        toast.success(`${sentCount} email${sentCount !== 1 ? "s" : ""} sent successfully`);
+      }
       setSent(true);
       setTimeout(() => {
         setSent(false);
@@ -119,7 +127,9 @@ export default function SendEmailModal({
         onClose();
       }, 2000);
     } catch (err: any) {
-      setError(err?.message ?? "Failed to send email. Please try again.");
+      const errorMsg = err?.message ?? "Failed to send email. Please try again.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setSending(false);
     }
