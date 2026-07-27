@@ -12,7 +12,8 @@ import LearningPathsView from "./components/LearningPathsView";
 import LessonsView from "./components/LessonsView";
 import CoursesView from "./components/CoursesView";
 import AnalyticsView from "./components/AnalyticsView";
-import SettingsView from "./components/SettingsView";
+import AppSettingsView from "./components/AppSettingsView";
+import ProfileSettingsView from "./components/ProfileSettingsView";
 import EventsView from "./components/EventsView";
 import TechEventsView from "./components/TechEventsView";
 import LogoutScreen from "./components/LogoutScreen";
@@ -63,7 +64,8 @@ function AppInner() {
       case "lessons":     return { title: "Lessons", subtitle: "Manage your lesson library and content." };
       case "analytics":   return { title: "Analytics", subtitle: "Track platform performance and user engagement." };
       case "waitlist":    return { title: "Waitlist", subtitle: "Manage user waitlist and invitations." };
-      case "settings":    return { title: "Settings", subtitle: "Configure platform settings and preferences." };
+      case "appSettings":    return { title: "App Settings", subtitle: "Configure platform, payments, and integrations." };
+      case "profileSettings": return { title: "Profile Settings", subtitle: "Manage your account and preferences." };
       case "events":      return { title: "Events", subtitle: "Manage webinars, workshops, and live sessions." };
       case "techEvents":     return { title: "Tech Events", subtitle: "Conferences, hackathons, meetups, and tech talks." };
       case "notifications":  return { title: "Notifications", subtitle: "All your alerts, updates, and activity in one place." };
@@ -90,8 +92,10 @@ function AppInner() {
         return <LessonsView autoOpenModal={pendingModal === "createLesson"} aiMode={pendingModal === "aiLesson"} onModalOpened={clearPendingModal} />;
       case "analytics":
         return <AnalyticsView />;
-      case "settings":
-        return <SettingsView />;
+      case "appSettings":
+        return <AppSettingsView />;
+      case "profileSettings":
+        return <ProfileSettingsView />;
       case "events":
         return <EventsView />;
       case "techEvents":

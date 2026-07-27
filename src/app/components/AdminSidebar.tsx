@@ -9,6 +9,7 @@ import {
   Layers,
   BarChart3,
   Settings,
+  UserCog,
   LogOut,
   GraduationCap,
   Calendar,
@@ -47,7 +48,8 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
   const managementItems = [
     { id: "monitoring", label: "Monitoring", icon: Activity },
     { id: "waitlist", label: "Waitlist", icon: Clock },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "appSettings", label: "App Settings", icon: Settings },
+    { id: "profileSettings", label: "Profile", icon: UserCog },
   ];
 
   const eventsSubItems = [

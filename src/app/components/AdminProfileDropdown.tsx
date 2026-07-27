@@ -23,9 +23,9 @@ export default function AdminProfileDropdown({ open, onClose, onNavigate, onLogo
   if (!open) return null;
 
   const menuItems = [
-    { icon: User,     label: "View Profile",    sub: "Manage your account",    action: () => { onNavigate("settings"); onClose(); } },
-    { icon: Settings, label: "Platform Settings", sub: "Configure your platform", action: () => { onNavigate("settings"); onClose(); } },
-    { icon: Bell,     label: "Notifications",    sub: "Manage alerts",           action: () => onClose() },
+    { icon: User,     label: "View Profile",    sub: "Manage your account",    action: () => { onNavigate("profileSettings"); onClose(); } },
+    { icon: Settings, label: "App Settings", sub: "Configure your platform", action: () => { onNavigate("appSettings"); onClose(); } },
+    { icon: Bell,     label: "Notifications",    sub: "Manage alerts",           action: () => { onNavigate("profileSettings"); onClose(); } },
     { icon: HelpCircle, label: "Help & Support", sub: "Docs, FAQ, contact",      action: () => onClose() },
   ];
 

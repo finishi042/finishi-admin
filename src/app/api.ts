@@ -279,6 +279,10 @@ export const adminApi = {
     const q = hours ? `?hours=${hours}` : ''
     return get<any>(`/admin/monitoring/summary${q}`)
   },
+
+  // Integration Status
+  getIntegrationStatus: () => get<Record<string, boolean | null>>('/admin/integrations/status'),
+
   getMonitoringTimeseries: (params?: { hours?: number; bucket?: string; direction?: string }) => {
     const q = new URLSearchParams()
     if (params?.hours) q.set('hours', String(params.hours))
