@@ -13,7 +13,10 @@ import LearningPathsView from "./components/LearningPathsView";
 import LessonsView from "./components/LessonsView";
 import CoursesView from "./components/CoursesView";
 import AnalyticsView from "./components/AnalyticsView";
-import AppSettingsView from "./components/AppSettingsView";
+import PlatformSettingsView from "./components/PlatformSettingsView";
+import AdminsSettingsView from "./components/AdminsSettingsView";
+import PaymentSettingsView from "./components/PaymentSettingsView";
+import IntegrationsView from "./components/IntegrationsView";
 import ProfileSettingsView from "./components/ProfileSettingsView";
 import EventsView from "./components/EventsView";
 import TechEventsView from "./components/TechEventsView";
@@ -66,7 +69,10 @@ function AppInner() {
       case "lessons":     return { title: "Lessons", subtitle: "Manage your lesson library and content." };
       case "analytics":   return { title: "Analytics", subtitle: "Track platform performance and user engagement." };
       case "waitlist":    return { title: "Waitlist", subtitle: "Manage user waitlist and invitations." };
-      case "appSettings":    return { title: "App Settings", subtitle: "Configure platform, payments, and integrations." };
+      case "platformSettings": return { title: "Platform Settings", subtitle: "Configure your platform's identity and accessibility." };
+      case "adminsSettings":   return { title: "Admin Management", subtitle: "Create and manage admin accounts." };
+      case "payments":         return { title: "Payment Settings", subtitle: "Configure payment gateways and billing." };
+      case "integrations":     return { title: "Integrations", subtitle: "Manage API access and third-party connections." };
       case "profileSettings": return { title: "Profile Settings", subtitle: "Manage your account and preferences." };
       case "events":      return { title: "Events", subtitle: "Manage webinars, workshops, and live sessions." };
       case "techEvents":     return { title: "Tech Events", subtitle: "Conferences, hackathons, meetups, and tech talks." };
@@ -94,8 +100,14 @@ function AppInner() {
         return <LessonsView autoOpenModal={pendingModal === "createLesson"} aiMode={pendingModal === "aiLesson"} onModalOpened={clearPendingModal} />;
       case "analytics":
         return <AnalyticsView />;
-      case "appSettings":
-        return <AppSettingsView />;
+      case "platformSettings":
+        return <PlatformSettingsView />;
+      case "adminsSettings":
+        return <AdminsSettingsView />;
+      case "payments":
+        return <PaymentSettingsView />;
+      case "integrations":
+        return <IntegrationsView />;
       case "profileSettings":
         return <ProfileSettingsView />;
       case "events":

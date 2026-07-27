@@ -17,6 +17,9 @@ import {
   ChevronDown,
   Cpu,
   Activity,
+  Globe,
+  CreditCard,
+  Database,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import finishiLogo from "../../imports/finishi-logo.svg";
@@ -33,7 +36,9 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
   const adminRole = admin?.role === 'super_admin' ? 'Super Admin' : 'Admin';
   const adminInitials = adminName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
   const isEventsActive = activeTab === "events" || activeTab === "techEvents";
+  const isSettingsActive = activeTab === "platformSettings" || activeTab === "adminsSettings" || activeTab === "payments" || activeTab === "integrations";
   const [eventsOpen, setEventsOpen] = useState(isEventsActive);
+  const [settingsOpen, setSettingsOpen] = useState(isSettingsActive);
 
   const mainItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -48,13 +53,19 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
   const managementItems = [
     { id: "monitoring", label: "Monitoring", icon: Activity },
     { id: "waitlist", label: "Waitlist", icon: Clock },
-    { id: "appSettings", label: "App Settings", icon: Settings },
     { id: "profileSettings", label: "Profile", icon: UserCog },
   ];
 
   const eventsSubItems = [
     { id: "events", label: "All Events", icon: Calendar },
     { id: "techEvents", label: "Tech Events", icon: Cpu },
+  ];
+
+  const settingsSubItems = [
+    { id: "platformSettings", label: "Platform", icon: Globe },
+    { id: "adminsSettings", label: "Admins", icon: UserCog },
+    { id: "payments", label: "Payments", icon: CreditCard },
+    { id: "integrations", label: "Integrations", icon: Database },
   ];
 
   const handleEventsToggle = () => {
@@ -65,9 +76,22 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
     }
   };
 
+  const handleSettingsToggle = () => {
+    const willOpen = !settingsOpen;
+    setSettingsOpen(willOpen);
+    if (willOpen && !isSettingsActive) {
+      onTabChange("platformSettings");
+    }
+  };
+
   const handleSubItemClick = (id: string) => {
     onTabChange(id);
-    setEventsOpen(true);
+    if (eventsSubItems.some(item => item.id === id)) {
+      setEventsOpen(true);
+    }
+    if (settingsSubItems.some(item => item.id === id)) {
+      setSettingsOpen(true);
+    }
     onClose?.();
   };
 
@@ -169,6 +193,53 @@ export default function AdminSidebar({ activeTab, onTabChange, onClose }: AdminS
         {managementItems.map(item => (
           <NavButton key={item.id} {...item} />
         ))}
+
+        {/* Settings with sub-items */}
+        <div>
+          <button
+            onClick={handleSettingsToggle}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+              isSettingsActive
+                ? "bg-[#F6EEFF] dark:bg-[#1E1030] text-[#7B2CBF] dark:text-[#C77DFF]"
+                : "text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#FAFAFC] dark:hover:bg-[#160D20] hover:text-[#111827] dark:hover:text-[#F9FAFB]"
+            }`}
+          >
+            <Settings className="w-5 h-5 shrink-0" />
+            <span className="font-medium text-sm flex-1 text-left">Settings</span>
+            <ChevronDown
+              className={`w-4 h-4 shrink-0 transition-transform duration-200 ${settingsOpen ? "rotate-180" : ""}`}
+            />
+          </button>
+
+          {/* Sub-items */}
+          <div
+            className={`overflow-hidden transition-all duration-200 ${
+              settingsOpen ? "max-h-48 opacity-100 mt-0.5" : "max-h-0 opacity-0"
+            }`}
+          >
+            <div className="ml-4 pl-3 border-l-2 border-[#F6EEFF] dark:border-[#2D2040] space-y-0.5 py-0.5">
+              {settingsSubItems.map(sub => {
+                const SubIcon = sub.icon;
+                const active = activeTab === sub.id;
+                return (
+                  <button
+                    key={sub.id}
+                    onClick={() => handleSubItemClick(sub.id)}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all ${
+                      active
+                        ? "bg-[#F6EEFF] dark:bg-[#1E1030] text-[#7B2CBF] dark:text-[#C77DFF]"
+                        : "text-[#6B7280] dark:text-[#9CA3AF] hover:bg-[#FAFAFC] dark:hover:bg-[#160D20] hover:text-[#111827] dark:hover:text-[#F9FAFB]"
+                    }`}
+                  >
+                    <SubIcon className="w-4 h-4 shrink-0" />
+                    <span className="font-medium text-sm">{sub.label}</span>
+                    {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#7B2CBF] dark:bg-[#C77DFF]" />}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       </nav>
 
       {/* Admin Profile */}

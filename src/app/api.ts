@@ -310,6 +310,8 @@ export const adminApi = {
 
   // Admin Management
   getAdmins: () => get<AdminUser[]>('/admin/admins'),
+  updateAdmin: (adminId: string, body: { full_name?: string; email?: string; role?: string }) =>
+    put<AdminUser>(`/admin/admins/${adminId}`, body),
   deleteAdmin: (adminId: string) => del<any>(`/admin/admins/${adminId}`),
 
   getMonitoringTimeseries: (params?: { hours?: number; bucket?: string; direction?: string }) => {
