@@ -283,6 +283,10 @@ export const adminApi = {
   // Integration Status
   getIntegrationStatus: () => get<Record<string, boolean | null>>('/admin/integrations/status'),
 
+  // Admin Management
+  getAdmins: () => get<AdminUser[]>('/admin/admins'),
+  deleteAdmin: (adminId: string) => del<any>(`/admin/admins/${adminId}`),
+
   getMonitoringTimeseries: (params?: { hours?: number; bucket?: string; direction?: string }) => {
     const q = new URLSearchParams()
     if (params?.hours) q.set('hours', String(params.hours))
