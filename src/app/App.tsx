@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import { AdminAuthProvider, useAdminAuth } from "./context/AdminAuthContext";
 import { Toaster } from "sonner";
@@ -36,6 +36,7 @@ function AppInner() {
   const activeTab = pathSegment;
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [pendingModal, setPendingModal] = useState<string | null>(null);
   const [isLoggedOut, setIsLoggedOut] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
@@ -173,6 +174,8 @@ function AppInner() {
             activeTab={activeTab}
             onTabChange={handleTabChange}
             onClose={() => setSidebarOpen(false)}
+            collapsed={sidebarCollapsed}
+            onToggleCollapse={() => setSidebarCollapsed(c => !c)}
           />
         </div>
 
@@ -208,38 +211,110 @@ export default function App() {
 
 function AuthGate() {
   const { admin, loading, login, error } = useAdminAuth();
-  const [email, setEmail] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  // Initialize email from URL if available (for persistence across refresh)
+  const [email, setEmailState] = useState(() => searchParams.get('email') || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   
-  // Forgot password flow
-  const [view, setView] = useState<'login' | 'forgot' | 'reset'>('login');
+  // Forgot password flow - initialize from URL
+  const getInitialView = (): 'login' | 'forgot' | 'reset' => {
+    const urlView = searchParams.get('view');
+    if (urlView === 'forgot' || urlView === 'reset') return urlView;
+    return 'login';
+  };
+  const [viewState, setViewState] = useState<'login' | 'forgot' | 'reset'>(getInitialView);
+  
+  // Wrapper to update both state and URL for view
+  const setView = (newView: 'login' | 'forgot' | 'reset') => {
+    setViewState(newView);
+    const newParams = new URLSearchParams(searchParams);
+    if (newView === 'login') {
+      newParams.delete('view');
+      newParams.delete('email');
+    } else {
+      newParams.set('view', newView);
+      if (email) {
+        newParams.set('email', email);
+      }
+    }
+    setSearchParams(newParams, { replace: true });
+  };
+  const view = viewState;
+  
+  // Wrapper to update email in both state and URL
+  const setEmail = (newEmail: string) => {
+    setEmailState(newEmail);
+    // Only persist email in URL when in forgot/reset views
+    if (view !== 'login') {
+      const newParams = new URLSearchParams(searchParams);
+      if (newEmail) {
+        newParams.set('email', newEmail);
+      } else {
+        newParams.delete('email');
+      }
+      setSearchParams(newParams, { replace: true });
+    }
+  };
+  
+  // Update URL email when transitioning to forgot/reset view
+  const goToForgotPassword = () => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.set('view', 'forgot');
+    if (email) {
+      newParams.set('email', email);
+    }
+    setSearchParams(newParams, { replace: true });
+    setViewState('forgot');
+    setForgotError(null);
+    setForgotMessage(null);
+  };
+  
   const [otp, setOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [forgotMessage, setForgotMessage] = useState<string | null>(null);
   const [forgotError, setForgotError] = useState<string | null>(null);
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const [countdown, setCountdown] = useState(0);
-  const [canResend, setCanResend] = useState(false);
+  // If we're on reset view after a refresh, allow resend immediately
+  const [canResend, setCanResend] = useState(() => getInitialView() === 'reset');
+  const [resendAvailableAt, setResendAvailableAt] = useState<number | null>(null);
+  const [resendCountdown, setResendCountdown] = useState(0);
 
-  // Countdown timer effect
+  // Countdown timer effect for OTP expiry
   useEffect(() => {
     if (!otpExpiresAt) return;
     
     const updateCountdown = () => {
       const remaining = Math.max(0, Math.floor((otpExpiresAt - Date.now()) / 1000));
       setCountdown(remaining);
-      setCanResend(remaining === 0);
     };
     
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
   }, [otpExpiresAt]);
+
+  // Separate countdown for resend availability (1 minute)
+  useEffect(() => {
+    if (!resendAvailableAt) return;
+    
+    const updateResendCountdown = () => {
+      const remaining = Math.max(0, Math.floor((resendAvailableAt - Date.now()) / 1000));
+      setResendCountdown(remaining);
+      setCanResend(remaining === 0);
+    };
+    
+    updateResendCountdown();
+    const interval = setInterval(updateResendCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [resendAvailableAt]);
 
   if (loading) {
     return (
@@ -273,6 +348,7 @@ function AuthGate() {
         const result = await adminAuthApi.forgotPassword(email);
         setForgotMessage(result.message);
         setOtpExpiresAt(Date.now() + 10 * 60 * 1000); // 10 minutes
+        setResendAvailableAt(Date.now() + 60 * 1000); // 1 minute for resend
         setCanResend(false);
         setView('reset');
       } catch (err: any) {
@@ -290,6 +366,7 @@ function AuthGate() {
         const { adminAuthApi } = await import('./api');
         await adminAuthApi.forgotPassword(email);
         setOtpExpiresAt(Date.now() + 10 * 60 * 1000); // 10 minutes
+        setResendAvailableAt(Date.now() + 60 * 1000); // 1 minute for resend
         setCanResend(false);
         setOtp("");
         setForgotMessage("A new code has been sent to your email.");
@@ -410,7 +487,7 @@ function AuthGate() {
 
               <button
                 type="button"
-                onClick={() => { setView('forgot'); setForgotError(null); setForgotMessage(null); }}
+                onClick={goToForgotPassword}
                 className="w-full text-center text-sm text-[#9D4EDD] hover:text-[#C77DFF] transition-colors"
               >
                 Forgot password?
@@ -529,14 +606,27 @@ function AuthGate() {
 
               <div>
                 <label className="text-xs font-semibold text-white/50 block mb-1.5">Confirm Password</label>
-                <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm new password"
-                  required
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-white/[0.12] bg-white/[0.06] text-white text-sm placeholder:text-white/30 outline-none focus:border-[#7B2CBF]"
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    placeholder="Confirm new password"
+                    required
+                    className="w-full px-3.5 py-2.5 pr-11 rounded-lg border border-white/[0.12] bg-white/[0.06] text-white text-sm placeholder:text-white/30 outline-none focus:border-[#7B2CBF]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-white/50 hover:text-white/80 transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/></svg>
+                    ) : (
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
                 {confirmPassword && newPassword !== confirmPassword && (
                   <p className="text-[#EF4444] text-[10px] mt-1">Passwords don't match</p>
                 )}
@@ -569,7 +659,7 @@ function AuthGate() {
                     : 'text-white/30 cursor-not-allowed'
                 }`}
               >
-                {canResend ? "Resend code" : `Resend available in ${Math.floor(countdown / 60)}:${(countdown % 60).toString().padStart(2, '0')}`}
+                {canResend ? "Resend code" : `Resend in ${resendCountdown}s`}
               </button>
 
               <button
